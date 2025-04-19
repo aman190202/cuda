@@ -1,23 +1,21 @@
 #!/bin/bash
-#SBATCH --job-name=gpu_job
-#SBATCH --output=gpu_job_%j.out
-#SBATCH --error=gpu_job_%j.err
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:1
-#SBATCH --mem=16G
-#SBATCH --time=01:00:00
+#SBATCH --job-name=warp_run
+#SBATCH --output=output/warp_run.out
+#SBATCH --error=output/warp_run.err
+#SBATCH --time=02:00:00               # Adjust as needed
+#SBATCH --partition=gpu               # Or the appropriate GPU partition
+#SBATCH --gres=gpu:1                  # Request 1 GPU
+#SBATCH --mem=16G                     # Adjust memory as needed
+#SBATCH --cpus-per-task=4            # Adjust CPU cores as needed
 
 # Load necessary modules
 module load cuda/11.8
-module load gcc/9.3.0
+module load gcc/10.1
 
 # Print GPU information
-nvidia-smi
+# g++ add.cpp -o add
+nvcc main.cu -o render
+nvprof ./render
 
-# Compile the CUDA program
-nvcc add.cu -o add
-
-# Run the program
-./add 
+# Your command to run the GPU application
+# Example: python your_gpu_script.py 
