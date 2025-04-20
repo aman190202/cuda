@@ -21,8 +21,16 @@ __device__ __host__ vec3 operator*(const vec3& a, float b){
     return vec3{a.x * b, a.y * b, a.z * b};
 }   
 
+__device__ __host__ vec3 operator*(float a, const vec3& b){
+    return vec3{a * b.x, a * b.y, a * b.z};
+}   
+
 __device__ __host__ vec3 operator/(const vec3& a, float b){
     return vec3{a.x / b, a.y / b, a.z / b};
+}
+
+__device__ __host__ vec3 operator/(const vec3& a, const vec3& b){
+    return vec3{a.x / b.x, a.y / b.y, a.z / b.z};
 }
 
 __device__ __host__ vec3 cross(const vec3& a, const vec3& b){
@@ -51,7 +59,12 @@ __device__ __host__ float distance(const vec3& a, const vec3& b){
 
 __device__ __host__ void normalize(vec3& a){
     a = a / length(a);
-}   
+}
+
+// for == operator
+__device__ __host__ bool operator==(const vec3& a, const vec3& b){
+    return a.x == b.x && a.y == b.y && a.z == b.z;
+}      
 
 #endif // VEC_H
 

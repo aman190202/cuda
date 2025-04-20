@@ -1,9 +1,9 @@
 ## SLURM PROLOG ###############################################################
-##    Job ID : 10959897
+##    Job ID : 10972391
 ##  Job Name : warp_run
-##  Nodelist : gpu2003
+##  Nodelist : gpu2006
 ##      CPUs : 
 ##  Mem/Node : 16384 MB
 ## Directory : /oscar/scratch/aagar133/cuda
-##   Job Started : Sat Apr 19 07:01:42 PM EDT 2025
+##   Job Started : Sun Apr 20 12:06:35 AM EDT 2025
 ###############################################################################

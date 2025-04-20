@@ -1,18 +1,20 @@
-==2360541== NVPROF is profiling process 2360541, command: ./render
-==2360541== Profiling application: ./render
-==2360541== Profiling result:
+==3690458== NVPROF is profiling process 3690458, command: ./render
+==3690458== Profiling application: ./render
+==3690458== Profiling result:
             Type  Time(%)      Time     Calls       Avg       Min       Max  Name
- GPU activities:   99.06%  2.2793ms         1  2.2793ms  2.2793ms  2.2793ms  [CUDA memcpy DtoH]
-                    0.94%  21.664us         1  21.664us  21.664us  21.664us  generateImage(color*, int, int)
-      API calls:   68.13%  150.70ms         1  150.70ms  150.70ms  150.70ms  cudaMalloc
-                   30.33%  67.092ms         1  67.092ms  67.092ms  67.092ms  cudaLaunchKernel
-                    1.17%  2.5775ms         1  2.5775ms  2.5775ms  2.5775ms  cudaMemcpy
-                    0.22%  487.52us       101  4.8260us     118ns  239.71us  cuDeviceGetAttribute
-                    0.14%  314.83us         1  314.83us  314.83us  314.83us  cudaFree
-                    0.01%  21.222us         1  21.222us  21.222us  21.222us  cuDeviceGetName
-                    0.00%  6.7950us         1  6.7950us  6.7950us  6.7950us  cuDeviceGetPCIBusId
-                    0.00%  1.1580us         3     386ns     169ns     817ns  cuDeviceGetCount
-                    0.00%     691ns         2     345ns     144ns     547ns  cuDeviceGet
-                    0.00%     577ns         1     577ns     577ns     577ns  cuDeviceTotalMem
-                    0.00%     297ns         1     297ns     297ns     297ns  cuModuleGetLoadingMode
-                    0.00%     234ns         1     234ns     234ns     234ns  cuDeviceGetUuid
+ GPU activities:   99.87%  6.62872s         1  6.62872s  6.62872s  6.62872s  generateImage(color*, int, int, light*, int)
+                    0.09%  5.6419ms         1  5.6419ms  5.6419ms  5.6419ms  [CUDA memcpy HtoD]
+                    0.04%  2.7426ms         1  2.7426ms  2.7426ms  2.7426ms  [CUDA memcpy DtoH]
+      API calls:   97.38%  6.62875s         1  6.62875s  6.62875s  6.62875s  cudaDeviceSynchronize
+                    2.39%  162.40ms         2  81.202ms  185.35us  162.22ms  cudaMalloc
+                    0.14%  9.2308ms         2  4.6154ms  3.3919ms  5.8389ms  cudaMemcpy
+                    0.08%  5.6077ms         1  5.6077ms  5.6077ms  5.6077ms  cudaLaunchKernel
+                    0.01%  760.67us         2  380.33us  322.97us  437.70us  cudaFree
+                    0.01%  481.24us       101  4.7640us     120ns  240.83us  cuDeviceGetAttribute
+                    0.00%  21.081us         1  21.081us  21.081us  21.081us  cuDeviceGetName
+                    0.00%  6.7120us         1  6.7120us  6.7120us  6.7120us  cuDeviceGetPCIBusId
+                    0.00%  2.2180us         3     739ns     160ns  1.8450us  cuDeviceGetCount
+                    0.00%     658ns         2     329ns     136ns     522ns  cuDeviceGet
+                    0.00%     446ns         1     446ns     446ns     446ns  cuDeviceTotalMem
+                    0.00%     268ns         1     268ns     268ns     268ns  cuDeviceGetUuid
+                    0.00%     232ns         1     232ns     232ns     232ns  cuModuleGetLoadingMode
