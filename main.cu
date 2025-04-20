@@ -5,6 +5,7 @@
 #include "src/vec.h"
 #include "src/renderer.h"
 #include "src/light.h"
+#include "src/sampler.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "src/stb_image_write.h"
 
@@ -107,13 +108,16 @@ int main()
     int width  = 1000;
     int height = 1000;
     int total_pixels = width * height;
+    std::string vdbFilePath = "v1/untitled.filecache1_v1.0092.vdb";
+
+    initializeSampler(vdbFilePath);
+    std::vector<light> lights = generateRandomLights(100000);
+    int num_lights = static_cast<int>(lights.size());
 
     // Host image buffer
     std::vector<color> Image(total_pixels);
 
-    // Generate 5000 random lights
-    std::vector<light> lights = generateRandomLights(100000);
-    int num_lights = static_cast<int>(lights.size());
+    
 
     // Allocate device memory
     color* d_image;

@@ -11,9 +11,21 @@
 # Load necessary modules
 module load cuda/11.8
 module load gcc/10.1
+module load miniconda3/23.11.0s
+source /oscar/runtime/software/external/miniconda3/23.11.0/etc/profile.d/conda.sh
 
 # Print GPU information
 # g++ add.cpp -o add
+
+conda activate graphics
+conda install conda-forge::boost -y
+conda install conda-forge::tbb -y
+conda install anaconda::blosc -y
+cd openvdb
+mkdir build
+cd build
+cmake ..
+make -j4 && make install
 nvcc main.cu -o render
 nvprof ./render
 

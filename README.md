@@ -1,5 +1,6 @@
-# cuda
-learning cuda
+# Volumetric Path-tracer illuminated by million lights in CUDA
+
+writing a volumetric path-tracer in CUDA C++
 
 cluster instruction
 ```bash
