@@ -2,48 +2,19 @@
 #include <vector>
 #include <cmath>
 #include <random>
+#include <fstream>
+#include <string>
+#include <filesystem>
 #include "src/vec.h"
-#include "src/renderer.h"
 #include "src/light.h"
-#include "src/sampler.h"
+#include "src/renderer.h"
+// #include "vdb_to_lights.cu" 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "src/stb_image_write.h"
 
 constexpr float PI = 3.14159265358979323846f;
 
-// Function to generate random lights
-std::vector<light> generateRandomLights(int num_lights) {
-    std::vector<light> lights;
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> pos_dist(-9.0f, 9.0f);  // Keep within box bounds
-    std::uniform_real_distribution<float> color_dist(0.0f, 1.0f);
-    std::uniform_real_distribution<float> intensity_dist(0.1f, 1.0f);
 
-    for (int i = 0; i < num_lights; ++i) {
-        light l;
-        // Random position within the box
-        l.position = vec3{
-            pos_dist(gen),
-            -9,
-            pos_dist(gen)
-        };
-        
-        // Random color
-        l.col = vec3{
-            1.f,
-            color_dist(gen),
-            color_dist(gen)
-        };
-        
-        // Small random intensity
-        l.intensity = intensity_dist(gen) * 0.01f;  // Scale down intensity
-        
-        lights.push_back(l);
-    }
-    
-    return lights;
-}
 
 // Simple Reinhard tone mapping
 __device__ __host__ vec3 toneMap(const vec3& color) {
@@ -75,7 +46,7 @@ __global__ void generateImage(color* image, int width, int height, light* lights
     float u = (2.0f * (i + 0.5f) / float(width)  - 1.0f) * aspect * scale;
     float v = (1.0f - 2.0f * (j + 0.5f) / float(height)) * scale;
 
-    vec3 ray_origin = vec3{0.0f, 0.0f, 30.0f};
+    vec3 ray_origin = vec3{0.0f, 0.0f, 100.0f};
     vec3 ray_direction = normalize(vec3{u, v, -1.0f});
 
     vec3 pixel_color = trace_ray(ray_origin, ray_direction, lights, num_lights);
@@ -103,22 +74,64 @@ void saveImage(const std::vector<color>& image, int width, int height, const cha
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " <lights_file>" << std::endl;
+        return 1;
+    }
+
+    const char* lights_file = argv[1];
     int width  = 1000;
     int height = 1000;
     int total_pixels = width * height;
-    std::string vdbFilePath = "v1/untitled.filecache1_v1.0092.vdb";
 
-    initializeSampler(vdbFilePath);
-    std::vector<light> lights = generateRandomLights(100000);
+    // Extract base filename without extension
+    std::string input_file(lights_file);
+    size_t last_slash = input_file.find_last_of("/\\");
+    std::string filename = (last_slash != std::string::npos) ? input_file.substr(last_slash + 1) : input_file;
+    size_t last_dot = filename.find_last_of(".");
+    std::string base_name = (last_dot != std::string::npos) ? filename.substr(0, last_dot) : filename;
+    
+    // Ensure output directory exists
+    std::filesystem::create_directories("output");
+    std::string output_file = "output/" + base_name + ".png";
+
+    std::vector<light> lights;
+
+    // Load from binary file
+    std::ifstream lightFile(lights_file, std::ios::binary);
+    if (!lightFile) {
+        std::cerr << "Failed to open " << lights_file << std::endl;
+        return 1;
+    }
+
+    // Determine file size
+    lightFile.seekg(0, std::ios::end);
+    std::streamsize size = lightFile.tellg();
+    lightFile.seekg(0, std::ios::beg);
+
+    if (size <= 0 || size % sizeof(light) != 0) {
+        std::cerr << "Invalid file size or format" << std::endl;
+        return 1;
+    }
+
+    // Resize and read into vector
+    lights.resize(size / sizeof(light));
+    if (!lightFile.read(reinterpret_cast<char*>(lights.data()), size)) {
+        std::cerr << "Error reading from light.bin" << std::endl;
+        return 1;
+    }
+
     int num_lights = static_cast<int>(lights.size());
+    std::cout << "Number of lights: " << num_lights << std::endl;
+
+    // Get volume bounds if needed
 
     // Host image buffer
     std::vector<color> Image(total_pixels);
 
     
-
     // Allocate device memory
     color* d_image;
     light* d_lights;
@@ -134,7 +147,8 @@ int main()
 
     // Copy back and save
     cudaMemcpy(Image.data(), d_image, total_pixels * sizeof(color), cudaMemcpyDeviceToHost);
-    saveImage(Image, width, height, "output/output.png");
+    saveImage(Image, width, height, output_file.c_str());
+    std::cout << "Image saved to: " << output_file << std::endl;
 
     // Cleanup
     cudaFree(d_image);

@@ -1,33 +1,35 @@
 #!/bin/bash
-#SBATCH --job-name=warp_run
+#SBATCH --job-name=installation
 #SBATCH --output=output/warp_run.out
 #SBATCH --error=output/warp_run.err
-#SBATCH --time=02:00:00               # Adjust as needed
-#SBATCH --partition=gpu               # Or the appropriate GPU partition
-#SBATCH --gres=gpu:1                  # Request 1 GPU
-#SBATCH --mem=16G                     # Adjust memory as needed
-#SBATCH --cpus-per-task=4            # Adjust CPU cores as needed
+#SBATCH --time=00:30:00               
+#SBATCH --partition=gpu               
+#SBATCH --gres=gpu:1                  
+#SBATCH --mem=16G                     
+#SBATCH --cpus-per-task=4        
 
 # Load necessary modules
+
 module load cuda/11.8
-module load gcc/10.1
 module load miniconda3/23.11.0s
 source /oscar/runtime/software/external/miniconda3/23.11.0/etc/profile.d/conda.sh
 
-# Print GPU information
-# g++ add.cpp -o add
-
+# Activate conda environment and install necessary compilers
 conda activate graphics
-conda install conda-forge::boost -y
-conda install conda-forge::tbb -y
-conda install anaconda::blosc -y
-cd openvdb
-mkdir build
-cd build
-cmake ..
-make -j4 && make install
-nvcc main.cu -o render
-nvprof ./render
 
-# Your command to run the GPU application
-# Example: python your_gpu_script.py 
+
+
+# Now compile CUDA code
+# nvcc main.cu -o render
+# nvprof ./render lights/untitled.filecache1_v1.0026_lights.bin
+
+# for file in lights/*.bin; do
+#     if [ -f "$file" ]; then
+#         echo "Processing $file..."
+#         nvprof ./render "$file"
+#     fi
+# done
+
+nvprof ./render untitled.filecache1_v1.0086_lights.bin
+
+echo "All files processed!" 

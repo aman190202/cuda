@@ -1,15 +1,12 @@
 ## SLURM PROLOG ###############################################################
-##    Job ID : 10976189
-##  Job Name : warp_run
-##  Nodelist : gpu2003
+##    Job ID : 11042089
+##  Job Name : installation
+##  Nodelist : gpu2001
 ##      CPUs : 
 ##  Mem/Node : 16384 MB
 ## Directory : /oscar/scratch/aagar133/cuda
-##   Job Started : Sun Apr 20 02:03:29 AM EDT 2025
+##   Job Started : Mon Apr 21 01:14:18 AM EDT 2025
 ###############################################################################
-Retrieving notices: ...working... done
-Collecting package metadata (current_repodata.json): ...working... done
-Solving environment: ...working... failed with initial frozen solve. Retrying with flexible solve.
-Solving environment: ...working... failed with repodata from current_repodata.json, will retry with next repodata source.
-Collecting package metadata (repodata.json): ...working... done
-Solving environment: ...working... 
+Number of lights: 49464492
+Image saved to: output/untitled.filecache1_v1.0086_lights.png
+All files processed!

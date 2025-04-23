@@ -4,7 +4,6 @@
 #include "vec.h"    
 
 
-
 struct color{
     float r, g, b;
 };

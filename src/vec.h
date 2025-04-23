@@ -3,6 +3,15 @@
 
 struct vec3{
     float x, y, z;
+    
+    // Default constructor
+    __device__ __host__ vec3() : x(0), y(0), z(0) {}
+    
+    // Constructor for all components
+    __device__ __host__ vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
+    
+    // Constructor for same value in all components
+    __device__ __host__ vec3(float v) : x(v), y(v), z(v) {}
 };
 
 __device__ __host__ vec3 operator+(const vec3& a, const vec3& b){
