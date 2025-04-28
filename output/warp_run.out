@@ -1,12 +1,193 @@
 ## SLURM PROLOG ###############################################################
-##    Job ID : 11042089
+##    Job ID : 11188074
 ##  Job Name : installation
-##  Nodelist : gpu2001
+##  Nodelist : gpu2009
 ##      CPUs : 
 ##  Mem/Node : 16384 MB
 ## Directory : /oscar/scratch/aagar133/cuda
-##   Job Started : Mon Apr 21 01:14:18 AM EDT 2025
+##   Job Started : Sun Apr 27 11:30:55 PM EDT 2025
 ###############################################################################
-Number of lights: 49464492
-Image saved to: output/untitled.filecache1_v1.0086_lights.png
+[ 49%] Built target openvdb_shared
+[ 98%] Built target openvdb_static
+[100%] Built target vdb_print
+Install the project...
+-- Install configuration: "Release"
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/FindBlosc.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/FindJemalloc.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/FindLog4cplus.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/FindOpenEXR.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/FindOpenVDB.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/FindTBB.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/OpenVDBGLFW3Setup.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/OpenVDBHoudiniSetup.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/OpenVDBMayaSetup.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/cmake/OpenVDB/OpenVDBUtils.cmake
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/libopenvdb.a
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/libopenvdb.so.12.0.2
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/libopenvdb.so.12.0
+-- Set non-toolchain portion of runtime path of "/users/aagar133/.conda/envs/graphics/usr/local/lib64/libopenvdb.so.12.0.2" to "/usr/local/lib64:/users/aagar133/.conda/envs/graphics/lib"
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/lib64/libopenvdb.so
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/Exceptions.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/Grid.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/Metadata.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/MetaMap.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/openvdb.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/Platform.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/PlatformConfig.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/Types.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/TypeList.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/version.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/Archive.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/Compression.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/DelayedLoadMetadata.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/File.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/GridDescriptor.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/io.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/Queue.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/Stream.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/io/TempFile.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/BBox.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/ConjGradient.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Coord.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/DDA.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/FiniteDifference.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Half.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/LegacyFrustum.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Maps.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Mat.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Mat3.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Mat4.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Math.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Operators.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Proximity.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/QuantizedUnitVec.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Quat.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Ray.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Stats.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Stencils.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Transform.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Tuple.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Vec2.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Vec3.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/math/Vec4.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/AttributeArray.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/AttributeArrayString.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/AttributeGroup.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/AttributeSet.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/IndexFilter.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/IndexIterator.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointAdvect.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointAttribute.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointConversion.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointCount.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointDataGrid.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointDelete.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointGroup.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointMask.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointMove.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointRasterizeFrustum.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointRasterizeSDF.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointRasterizeTrilinear.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointSample.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointScatter.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointStatistics.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/PointTransfer.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/StreamCompression.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointAttributeImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointConversionImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointCountImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointDeleteImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointGroupImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointMaskImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointMoveImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointRasterizeFrustumImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointRasterizeSDFImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointRasterizeTrilinearImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointReplicateImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointSampleImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointScatterImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/points/impl/PointStatisticsImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Activate.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/ChangeBackground.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Clip.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Composite.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Count.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Dense.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/DenseSparseTools.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Diagnostics.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/FastSweeping.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Filter.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/FindActiveValues.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/GridOperators.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/GridTransformer.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Interpolation.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetAdvect.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetDilatedMesh.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetFilter.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetFracture.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetMeasure.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetMorph.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetPlatonic.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetRebuild.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetSphere.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetTracker.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetTubes.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/LevelSetUtil.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Mask.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Merge.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/MeshToVolume.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Morphology.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/MultiResGrid.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/NodeVisitor.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/ParticleAtlas.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/ParticlesToLevelSet.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/PointAdvect.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/PointIndexGrid.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/PointPartitioner.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/PointScatter.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/PointsToMask.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/PoissonSolver.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/PotentialFlow.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Prune.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/RayIntersector.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/RayTracer.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/SignedFloodFill.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/Statistics.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/TopologyToLevelSet.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/ValueTransformer.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/VectorTransformer.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/VelocityFields.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/VolumeAdvect.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/VolumeToMesh.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/VolumeToSpheres.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/impl/ConvexVoxelizer.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/impl/LevelSetDilatedMeshImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tools/impl/LevelSetTubesImpl.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/InternalNode.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/Iterator.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/LeafBuffer.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/LeafManager.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/LeafNode.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/LeafNodeBool.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/LeafNodeMask.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/NodeManager.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/NodeUnion.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/RootNode.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/Tree.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/TreeIterator.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/tree/ValueAccessor.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/Assert.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/CpuTimer.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/ExplicitInstantiation.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/Formats.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/logging.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/MapsUtil.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/Name.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/NodeMasks.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/NullInterrupter.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/PagedArray.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/util/Util.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/include/openvdb/thread/Threading.h
+-- Installing: /users/aagar133/.conda/envs/graphics/usr/local/bin/vdb_print
+-- Set non-toolchain portion of runtime path of "/users/aagar133/.conda/envs/graphics/usr/local/bin/vdb_print" to "/usr/local/lib64:/users/aagar133/.conda/envs/graphics/lib"
 All files processed!

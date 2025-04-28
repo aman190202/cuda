@@ -26,3 +26,14 @@ DESTDIR=/users/aagar133/.conda/envs/graphics/include cmake .. \
 make -j$(nproc)
 DESTDIR=/users/aagar133/.conda/envs/graphics/include make install
 ```
+
+
+```
+module load  gcc/10.1.0-mojgbnp 
+
+LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH \
+LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so.6 \
+./read_vdb
+
+
+```

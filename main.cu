@@ -8,7 +8,7 @@
 #include "src/vec.h"
 #include "src/light.h"
 #include "src/renderer.h"
-// #include "vdb_to_lights.cu" 
+// #include "src/vdb_reader.cu"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "src/stb_image_write.h"
 
@@ -49,7 +49,24 @@ __global__ void generateImage(color* image, int width, int height, light* lights
     vec3 ray_origin = vec3{0.0f, 0.0f, 100.0f};
     vec3 ray_direction = normalize(vec3{u, v, -1.0f});
 
+    // Sample density along the ray
+    float step_size = 1.0f;
+    float max_distance = 200.0f;
+    float total_density = 0.0f;
+    
+    // for (float t = 0; t < max_distance; t += step_size) {
+    //     vec3 sample_pos = ray_origin + ray_direction * t;
+    //     if (vdb_reader->isInsideVolume(sample_pos)) {
+    //         float density = vdb_reader->sampleDensity(sample_pos);
+    //         total_density += density * step_size;
+    //     }
+    // }
+
     vec3 pixel_color = trace_ray(ray_origin, ray_direction, lights, num_lights);
+    
+    // Apply density-based attenuation
+    float attenuation = exp(-total_density);
+    pixel_color = pixel_color * attenuation;
     
     // Apply tone mapping
     pixel_color = toneMap(pixel_color);
@@ -76,12 +93,13 @@ void saveImage(const std::vector<color>& image, int width, int height, const cha
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <lights_file>" << std::endl;
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <lights_file> <vdb_file>" << std::endl;
         return 1;
     }
 
     const char* lights_file = argv[1];
+    const char* vdb_file = argv[2];
     int width  = 1000;
     int height = 1000;
     int total_pixels = width * height;
@@ -131,13 +149,22 @@ int main(int argc, char* argv[])
     // Host image buffer
     std::vector<color> Image(total_pixels);
 
-    
+    // Load VDB file
+    // VDBReader* vdb_reader = new VDBReader();
+    // if (!vdb_reader->loadFile(vdb_file)) {
+    //     std::cerr << "Failed to load VDB file: " << vdb_file << std::endl;
+    //     return 1;
+    // }
+
     // Allocate device memory
     color* d_image;
     light* d_lights;
+    // VDBReader* d_vdb_reader;
     cudaMalloc(&d_image, total_pixels * sizeof(color));
     cudaMalloc(&d_lights, num_lights * sizeof(light));
+    // cudaMalloc(&d_vdb_reader, sizeof(VDBReader));
     cudaMemcpy(d_lights, lights.data(), num_lights * sizeof(light), cudaMemcpyHostToDevice);
+    // cudaMemcpy(d_vdb_reader, vdb_reader, sizeof(VDBReader), cudaMemcpyHostToDevice);
 
     // Launch kernel
     int blockSize = 256;
@@ -153,5 +180,6 @@ int main(int argc, char* argv[])
     // Cleanup
     cudaFree(d_image);
     cudaFree(d_lights);
+    // cudaFree(d_vdb_reader);
     return 0;
 }

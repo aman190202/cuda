@@ -113,6 +113,47 @@ __device__ __host__ vec3 cornellBox(
     return final_color;
 }
 
+__device__ __host__ float intersect_sphere(const vec3& o, const vec3& d, const vec3& center, float radius)
+{
+    float r = radius;
+    vec3 oc = o - center;
+    float a = dot(d, d);
+    float b = 2 * dot(oc, d);
+    float c = dot(oc, oc) - r * r;
+    float discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) {
+        return NO_INTERSECTION;
+    }
+    float t = (-b - sqrt(discriminant)) / (2 * a);
+    return t;
+}   
+
+__device__ __host__ float hitLight(const vec3& ray_origin, const vec3& ray_direction, light* lights, int num_lights)
+{
+    float t_min = NO_INTERSECTION;
+    for (int i = 0; i < num_lights; i++) {
+        float radius = 0.1f * lights[i].intensity;   
+        float t = intersect_sphere(ray_origin, ray_direction, lights[i].position, radius);
+        if (t < t_min) {
+            t_min = t;
+        }
+    }
+    return t_min;
+}
+
+__device__ __host__ vec3 render_light(const vec3& ray_origin, const vec3& ray_direction, light* lights, int num_lights, float t)
+{
+    for (int i = 0; i < num_lights; i++) {
+        float radius = 0.1f * lights[i].intensity;    
+        float t_check = intersect_sphere(ray_origin, ray_direction, lights[i].position, radius);
+        if (t_check == t) {
+            return lights[i].col;
+        }
+    }
+    return vec3{0,0,0};
+}
+
+
 // top‑level ray trace: only Cornell box
 __device__ __host__ vec3 trace_ray(
     const vec3& ray_origin,
@@ -122,9 +163,14 @@ __device__ __host__ vec3 trace_ray(
 {
     vec3 normal{0,0,0};
     float t = intersect_cornell_box(ray_origin, ray_direction, lights, num_lights, normal);
+    float t_light = hitLight(ray_origin, ray_direction, lights, num_lights);    
 
     if (t >= NO_INTERSECTION)
         return vec3{0,0,0};  // miss
+
+    if (t_light < NO_INTERSECTION && t_light < t) {
+        return lights[0].col;
+    }
 
     return cornellBox(ray_origin, ray_direction, t, lights, num_lights, normal);
 }
