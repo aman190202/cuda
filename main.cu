@@ -9,6 +9,7 @@
 #include "src/light.h"
 #include "src/renderer.h"
 // #include "src/vdb_reader.cu"
+#include "src/vdb_reader.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "src/stb_image_write.h"
 
@@ -93,19 +94,24 @@ void saveImage(const std::vector<color>& image, int width, int height, const cha
 
 int main(int argc, char* argv[])
 {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <lights_file> <vdb_file>" << std::endl;
+    if (argc != 2) {    
+        std::cerr << "Usage: " << argv[0] << " <vdb_file>" << std::endl;
         return 1;
     }
 
-    const char* lights_file = argv[1];
-    const char* vdb_file = argv[2];
+    const char* vdb_file = argv[1];
+    readAndPrintVDB(std::string(vdb_file));
     int width  = 1000;
     int height = 1000;
     int total_pixels = width * height;
 
+    std::vector<light> lights = getLightsFromVDB(std::string(vdb_file));
+    std::cout << "Number of lights: " << lights.size() << std::endl;
+    // float density = getDensityAtPosition(std::string(vdb_file), 0.0f, 0.0f, 0.0f);
+    // std::cout << "Density at (0,0,0): " << density << std::endl;
+
     // Extract base filename without extension
-    std::string input_file(lights_file);
+    std::string input_file(vdb_file);
     size_t last_slash = input_file.find_last_of("/\\");
     std::string filename = (last_slash != std::string::npos) ? input_file.substr(last_slash + 1) : input_file;
     size_t last_dot = filename.find_last_of(".");
@@ -113,33 +119,36 @@ int main(int argc, char* argv[])
     
     // Ensure output directory exists
     std::filesystem::create_directories("output");
-    std::string output_file = "output/" + base_name + ".png";
+    std::string output_file = "scenes/" + base_name + ".png";
 
-    std::vector<light> lights;
+    float density = getDensityAtPosition(std::string(vdb_file), vec3{0.0f, 0.0f, 0.0f});
+    std::cout << "Density at (0,0,0): " << density << std::endl;
 
-    // Load from binary file
-    std::ifstream lightFile(lights_file, std::ios::binary);
-    if (!lightFile) {
-        std::cerr << "Failed to open " << lights_file << std::endl;
-        return 1;
-    }
+    // std::vector<light> lights;
 
-    // Determine file size
-    lightFile.seekg(0, std::ios::end);
-    std::streamsize size = lightFile.tellg();
-    lightFile.seekg(0, std::ios::beg);
+    // // Load from binary file
+    // std::ifstream lightFile(lights_file, std::ios::binary);
+    // if (!lightFile) {
+    //     std::cerr << "Failed to open " << lights_file << std::endl;
+    //     return 1;
+    // }
 
-    if (size <= 0 || size % sizeof(light) != 0) {
-        std::cerr << "Invalid file size or format" << std::endl;
-        return 1;
-    }
+    // // Determine file size
+    // lightFile.seekg(0, std::ios::end);
+    // std::streamsize size = lightFile.tellg();
+    // lightFile.seekg(0, std::ios::beg);
 
-    // Resize and read into vector
-    lights.resize(size / sizeof(light));
-    if (!lightFile.read(reinterpret_cast<char*>(lights.data()), size)) {
-        std::cerr << "Error reading from light.bin" << std::endl;
-        return 1;
-    }
+    // if (size <= 0 || size % sizeof(light) != 0) {
+    //     std::cerr << "Invalid file size or format" << std::endl;
+    //     return 1;
+    // }
+
+    // // Resize and read into vector
+    // lights.resize(size / sizeof(light));
+    // if (!lightFile.read(reinterpret_cast<char*>(lights.data()), size)) {
+    //     std::cerr << "Error reading from light.bin" << std::endl;
+    //     return 1;
+    // }
 
     int num_lights = static_cast<int>(lights.size());
     std::cout << "Number of lights: " << num_lights << std::endl;

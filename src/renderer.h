@@ -70,7 +70,7 @@ __device__ __host__ vec3 light_interaction(light l, vec3 normal, vec3 intersecti
     light_distance = fmaxf(light_distance, min_distance);
     
     // Smoother attenuation with a minimum threshold
-    float attenuation = 1.0f / (1.0f + light_distance * light_distance);
+    float attenuation = 1.0f / (0.2f + light_distance * light_distance * light_distance * 5.0f);
     
     float diffuse = max(dot(normal, light_direction), 0.0f);
     vec3 diffuse_color = diffuse * l.col * attenuation * color * l.intensity;
@@ -143,14 +143,16 @@ __device__ __host__ float hitLight(const vec3& ray_origin, const vec3& ray_direc
 
 __device__ __host__ vec3 render_light(const vec3& ray_origin, const vec3& ray_direction, light* lights, int num_lights, float t)
 {
+    vec3 color = vec3{0,0,0};
     for (int i = 0; i < num_lights; i++) {
-        float radius = 0.1f * lights[i].intensity;    
+        float radius = lights[i].intensity;    
         float t_check = intersect_sphere(ray_origin, ray_direction, lights[i].position, radius);
-        if (t_check == t) {
-            return lights[i].col;
+        if (t_check != NO_INTERSECTION) 
+        {
+            color = color + lights[i].col * lights[i].intensity;
         }
     }
-    return vec3{0,0,0};
+    return color;
 }
 
 
@@ -169,7 +171,7 @@ __device__ __host__ vec3 trace_ray(
         return vec3{0,0,0};  // miss
 
     if (t_light < NO_INTERSECTION && t_light < t) {
-        return lights[0].col;
+        return render_light(ray_origin, ray_direction, lights, num_lights, t_light);
     }
 
     return cornellBox(ray_origin, ray_direction, t, lights, num_lights, normal);

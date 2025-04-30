@@ -1,0 +1,264 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 11212639
+##  Job Name : installation
+##  Nodelist : gpu2114
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/scratch/aagar133/cuda
+##   Job Started : Wed Apr 30 12:16:40 PM EDT 2025
+###############################################################################
+Compilation complete!
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0001.vdb...
+Found grid: density
+Grid bbox: [2147483647, 2147483647, 2147483647] -> [-2147483648, -2147483648, -2147483648]
+Found grid: flame
+Grid bbox: [2147483647, 2147483647, 2147483647] -> [-2147483648, -2147483648, -2147483648]
+Found grid: temperature
+Grid bbox: [2147483647, 2147483647, 2147483647] -> [-2147483648, -2147483648, -2147483648]
+Original bounding box (world coordinates):
+  Min: (1.61061e+08, 1.61061e+08, 1.61061e+08)
+  Max: (-1.61061e+08, -1.61061e+08, -1.61061e+08)
+Flames grid value range: [3.40282e+38, -3.40282e+38]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 0
+Density at (0,0,0): 0
+Number of lights: 0
+Image saved to: scenes/untitled.filecache1_v1.0001.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0002.vdb...
+Found grid: density
+Grid bbox: [2147483647, 2147483647, 2147483647] -> [-2147483648, -2147483648, -2147483648]
+Found grid: flame
+Grid bbox: [2147483647, 2147483647, 2147483647] -> [-2147483648, -2147483648, -2147483648]
+Found grid: temperature
+Grid bbox: [2147483647, 2147483647, 2147483647] -> [-2147483648, -2147483648, -2147483648]
+Original bounding box (world coordinates):
+  Min: (1.61061e+08, 1.61061e+08, 1.61061e+08)
+  Max: (-1.61061e+08, -1.61061e+08, -1.61061e+08)
+Flames grid value range: [3.40282e+38, -3.40282e+38]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 0
+Density at (0,0,0): 0
+Number of lights: 0
+Image saved to: scenes/untitled.filecache1_v1.0002.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0003.vdb...
+Found grid: density
+Grid bbox: [19, 0, 25] -> [53, 15, 54]
+Found grid: flame
+Grid bbox: [19, 0, 25] -> [53, 15, 54]
+Found grid: temperature
+Grid bbox: [19, 0, 25] -> [53, 15, 54]
+Original bounding box (world coordinates):
+  Min: (-1.55694, 0.00998268, -1.04796)
+  Max: (0.99306, 1.13498, 1.12704)
+Flames grid value range: [1.02361e-05, 0.875486]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 1581
+Density at (0,0,0): 0
+Number of lights: 1581
+Image saved to: scenes/untitled.filecache1_v1.0003.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0004.vdb...
+Found grid: density
+Grid bbox: [24, 0, 18] -> [76, 24, 62]
+Found grid: flame
+Grid bbox: [18, 0, 15] -> [80, 28, 65]
+Found grid: temperature
+Grid bbox: [18, 0, 15] -> [80, 28, 65]
+Original bounding box (world coordinates):
+  Min: (-2.83194, 0.00998268, -1.79796)
+  Max: (1.81806, 2.10998, 1.95204)
+Flames grid value range: [1.00512e-05, 1.0045]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 8879
+Density at (0,0,0): 0
+Number of lights: 8879
+Image saved to: scenes/untitled.filecache1_v1.0004.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0005.vdb...
+Found grid: density
+Grid bbox: [32, 0, 29] -> [97, 29, 84]
+Found grid: flame
+Grid bbox: [23, 0, 24] -> [103, 36, 88]
+Found grid: temperature
+Grid bbox: [23, 0, 24] -> [103, 36, 88]
+Original bounding box (world coordinates):
+  Min: (-3.65694, 0.00998268, -2.32296)
+  Max: (2.34306, 2.70998, 2.47704)
+Flames grid value range: [1.00025e-05, 1.0739]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 23553
+Density at (0,0,0): 0
+Number of lights: 23553
+Image saved to: scenes/untitled.filecache1_v1.0005.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0006.vdb...
+Found grid: density
+Grid bbox: [25, 0, 23] -> [103, 36, 90]
+Found grid: flame
+Grid bbox: [15, 0, 19] -> [107, 41, 94]
+Found grid: temperature
+Grid bbox: [15, 0, 19] -> [107, 41, 94]
+Original bounding box (world coordinates):
+  Min: (-4.25694, 0.00998268, -2.69796)
+  Max: (2.64306, 3.08498, 2.92704)
+Flames grid value range: [1.00002e-05, 1.14131]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 50161
+Density at (0,0,0): 0
+Number of lights: 50161
+Image saved to: scenes/untitled.filecache1_v1.0006.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0007.vdb...
+Found grid: density
+Grid bbox: [33, 0, 18] -> [123, 41, 96]
+Found grid: flame
+Grid bbox: [26, 0, 15] -> [127, 47, 98]
+Found grid: temperature
+Grid bbox: [26, 0, 15] -> [127, 46, 98]
+Original bounding box (world coordinates):
+  Min: (-4.63194, 0.00998268, -2.99796)
+  Max: (2.94306, 3.45998, 3.22704)
+Flames grid value range: [1.00004e-05, 1.20487]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 92175
+Density at (0,0,0): 0
+Number of lights: 92175
+Image saved to: scenes/untitled.filecache1_v1.0007.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0008.vdb...
+Found grid: density
+Grid bbox: [26, 0, 29] -> [128, 47, 117]
+Found grid: flame
+Grid bbox: [22, 0, 29] -> [130, 49, 118]
+Found grid: temperature
+Grid bbox: [22, 0, 27] -> [131, 49, 118]
+Original bounding box (world coordinates):
+  Min: (-4.93194, 0.00998268, -3.29796)
+  Max: (3.24306, 3.68498, 3.52704)
+Flames grid value range: [1.00037e-05, 1.26403]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 151477
+Density at (0,0,0): 0
+Number of lights: 151477
+Image saved to: scenes/untitled.filecache1_v1.0008.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0009.vdb...
+Found grid: density
+Grid bbox: [20, 0, 25] -> [133, 54, 121]
+Found grid: flame
+Grid bbox: [18, 0, 25] -> [133, 54, 121]
+Found grid: temperature
+Grid bbox: [17, 0, 24] -> [134, 55, 122]
+Original bounding box (world coordinates):
+  Min: (-5.30694, 0.00998268, -3.52296)
+  Max: (3.46806, 4.13498, 3.82704)
+Flames grid value range: [1.0002e-05, 1.31832]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 229563
+Density at (0,0,0): 0
+Number of lights: 229563
+Image saved to: scenes/untitled.filecache1_v1.0009.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0010.vdb...
+Found grid: density
+Grid bbox: [29, 0, 21] -> [153, 62, 125]
+Found grid: flame
+Grid bbox: [29, 0, 21] -> [153, 62, 125]
+Found grid: temperature
+Grid bbox: [28, 0, 20] -> [154, 63, 127]
+Original bounding box (world coordinates):
+  Min: (-5.68194, 0.00998268, -3.82296)
+  Max: (3.76806, 4.73498, 4.20204)
+Flames grid value range: [1.00009e-05, 1.36814]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 326709
+Density at (0,0,0): 0
+Number of lights: 326709
+Image saved to: scenes/untitled.filecache1_v1.0010.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0011.vdb...
+Found grid: density
+Grid bbox: [23, 0, 17] -> [157, 70, 130]
+Found grid: flame
+Grid bbox: [23, 0, 18] -> [157, 69, 129]
+Found grid: temperature
+Grid bbox: [22, 0, 16] -> [158, 70, 131]
+Original bounding box (world coordinates):
+  Min: (-6.13194, 0.00998268, -4.12296)
+  Max: (4.06806, 5.25998, 4.50204)
+Flames grid value range: [1e-05, 1.41409]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 443201
+Density at (0,0,0): 0
+Number of lights: 443201
+Image saved to: scenes/untitled.filecache1_v1.0011.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0012.vdb...
+Found grid: density
+Grid bbox: [17, 0, 14] -> [161, 77, 134]
+Found grid: flame
+Grid bbox: [17, 0, 14] -> [161, 77, 133]
+Found grid: temperature
+Grid bbox: [17, 0, 12] -> [162, 78, 135]
+Original bounding box (world coordinates):
+  Min: (-6.50694, 0.00998268, -4.42296)
+  Max: (4.36806, 5.85998, 4.80204)
+Flames grid value range: [1.00009e-05, 1.45617]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 579154
+Density at (0,0,0): 0
+Number of lights: 579154
+Image saved to: scenes/untitled.filecache1_v1.0012.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0013.vdb...
+Found grid: density
+Grid bbox: [27, 0, 26] -> [181, 85, 154]
+Found grid: flame
+Grid bbox: [27, 0, 26] -> [181, 84, 153]
+Found grid: temperature
+Grid bbox: [26, 0, 24] -> [182, 85, 155]
+Original bounding box (world coordinates):
+  Min: (-7.03194, 0.00998268, -4.72296)
+  Max: (4.66806, 6.38498, 5.10204)
+Flames grid value range: [1.00006e-05, 1.49321]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 734818
+Density at (0,0,0): 0
+Number of lights: 734818
+Image saved to: scenes/untitled.filecache1_v1.0013.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0014.vdb...
+Found grid: density
+Grid bbox: [22, 0, 25] -> [183, 90, 155]
+Found grid: flame
+Grid bbox: [22, 0, 25] -> [183, 90, 155]
+Found grid: temperature
+Grid bbox: [21, 0, 24] -> [184, 91, 156]
+Original bounding box (world coordinates):
+  Min: (-7.40694, 0.00998268, -4.72296)
+  Max: (4.81806, 6.83498, 5.17704)
+Flames grid value range: [1.0001e-05, 1.52459]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 817074
+Density at (0,0,0): 0
+Number of lights: 817074
+Image saved to: scenes/untitled.filecache1_v1.0014.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0015.vdb...
+Found grid: density
+Grid bbox: [17, 0, 23] -> [184, 97, 155]
+Found grid: flame
+Grid bbox: [17, 0, 23] -> [184, 97, 155]
+Found grid: temperature
+Grid bbox: [16, 0, 21] -> [186, 97, 157]
+Original bounding box (world coordinates):
+  Min: (-7.78194, 0.00998268, -4.94796)
+  Max: (4.96806, 7.28498, 5.25204)
+Flames grid value range: [1.00002e-05, 1.55833]
+Volume scaled by factor: 2
+New base position: (0, -50, 0)
+Number of lights: 907550
+Density at (0,0,0): 0
+Number of lights: 907550
