@@ -1,8 +1,9 @@
 #pragma once
 #include <string>
 
-void readAndPrintVDB(const std::string& filename);
-// float getDensityAtPosition(const std::string& filename, float x, float y, float z);
-std::vector<light> getLightsFromVDB(const std::string& filename);
-// __host__ __device__ vec3 temperatureToColor(float temp);
-float getDensityAtPosition(const std::string& filename, const vec3& position);
+void readAndPrintVDB(const char* filename);
+std::vector<light> getLightsFromVDB(const char* filename);
+float getDensityAtPosition(const char* filename, const vec3& position);
+std::vector<density_sample> getDensitySamplesFromVDB(const char* filename);
+void getScaledBoundingBox(const char* filename, vec3& outMin, vec3& outMax);
+void getDensityRange(const char* filename, float& outMin, float& outMax, vec3& outMinPos, vec3& outMaxPos);

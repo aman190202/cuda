@@ -1,5 +1,6 @@
 #include "vec.h"
 #include "light.h"
+#include "vdb_reader.h"
 
 #define NO_INTERSECTION 99999.0f
 #define EPSILON           1e-6f
@@ -85,7 +86,9 @@ __device__ __host__ vec3 cornellBox(
     float           t,
     light*         lights,
     int            num_lights,
-    const vec3&    normal)
+    const vec3&    normal,
+    const vec3&    min,
+    const vec3&    max)
 {
     vec3 intersection_point = ray_origin + ray_direction * t;
     vec3 wall_color = vec3{0,0,0};
@@ -155,24 +158,123 @@ __device__ __host__ vec3 render_light(const vec3& ray_origin, const vec3& ray_di
     return color;
 }
 
-
-// top‑level ray trace: only Cornell box
-__device__ __host__ vec3 trace_ray(
-    const vec3& ray_origin,
-    const vec3& ray_direction,
-    light*      lights,
-    int         num_lights)
+__device__ __host__ float intersect_box(const vec3& o, const vec3& d, const vec3& min, const vec3& max)
 {
-    vec3 normal{0,0,0};
-    float t = intersect_cornell_box(ray_origin, ray_direction, lights, num_lights, normal);
-    float t_light = hitLight(ray_origin, ray_direction, lights, num_lights);    
+    // Calculate inverse direction to avoid division
 
-    if (t >= NO_INTERSECTION)
-        return vec3{0,0,0};  // miss
+    vec3 inv_d = vec3(1.0f) / d;
+    
+    // Calculate t values for each slab
+    float t1 = (min.x - o.x) * inv_d.x;
+    float t2 = (max.x - o.x) * inv_d.x;
+    float t3 = (min.y - o.y) * inv_d.y;
+    float t4 = (max.y - o.y) * inv_d.y;
+    float t5 = (min.z - o.z) * inv_d.z;
+    float t6 = (max.z - o.z) * inv_d.z;
+    
+    // Find min and max t values for each axis
+    float tmin = fmaxf(fmaxf(fminf(t1, t2), fminf(t3, t4)), fminf(t5, t6));
+    float tmax = fminf(fminf(fmaxf(t1, t2), fmaxf(t3, t4)), fmaxf(t5, t6));
+    
+    // If tmax < 0, ray is intersecting but in the opposite direction
+    if (tmax < 0) return -1.0f;
+    
+    // If tmin > tmax, ray doesn't intersect the box
+    if (tmin > tmax) return -1.0f;
+    
+    // Return the first intersection point (tmin)
+    return tmin;
+}
 
-    if (t_light < NO_INTERSECTION && t_light < t) {
-        return render_light(ray_origin, ray_direction, lights, num_lights, t_light);
+// Helpers
+__device__ __host__ __forceinline__ bool is_out_of_bounds(const vec3& point, const vec3& min, const vec3& max) {
+    return (point.x < min.x || point.x > max.x ||
+            point.y < min.y || point.y > max.y ||
+            point.z < min.z || point.z > max.z);
+}
+
+// Safe density fetch (you should replace this with real VDB safe access logic)
+__device__ __host__ __forceinline__ float getDensityAtPositionSafe(const char* vdb_file, const vec3& point, const vec3& min, const vec3& max) {
+    if (is_out_of_bounds(point, min, max))
+        return -1.0f;  // Out of bounds
+
+    float density = getDensityAtPosition(vdb_file, point);
+
+    // Protect against invalid values (NaN, inf)
+    if (!isfinite(density))
+        return -1.0f;
+
+    return density;
+}
+
+// Volume rendering (robust, skips invalid samples)
+__device__ __host__ __forceinline__ vec3 render_volume(
+    const vec3& o, const vec3& d,
+    const vec3& min, const vec3& max,
+    float t_near,
+    light* lights, int num_lights,
+    const char* vdb_file,
+    density_sample* density_samples,
+    int num_density_samples)
+{
+    const float step_size    = 1.0f;
+    const float max_distance = 50.0f;
+    float accumulated_density = 0.0f;
+
+    for (float t = 0.0f; t < max_distance; t += step_size) {
+        vec3 p = o + d * (t_near + t);
+
+        // skip if outside world‐space box
+        if (p.x < min.x || p.x > max.x ||
+            p.y < min.y || p.y > max.y ||
+            p.z < min.z || p.z > max.z)
+            continue;
+
+        // find the nearest density sample
+        float nearest_distance = 99999.0f;
+        density_sample nearest_sample = {vec3(0,0,0), 0.0f};  // Initialize with default values
+        for (int i = 0; i < num_density_samples; i++) {
+            float distance = length(p - density_samples[i].position);
+            if (distance < nearest_distance && distance < 0.1f) {
+                nearest_distance = distance;
+                nearest_sample = density_samples[i];
+            }
+        }
+
+        float density = nearest_sample.value;
+        accumulated_density += density;
     }
 
-    return cornellBox(ray_origin, ray_direction, t, lights, num_lights, normal);
+    if (accumulated_density > 0.0f)
+        return vec3{1,1,1};
+    else
+        return vec3{0,0,0};
+}
+
+
+
+
+// Ray trace logic (fixed t_box check)
+__device__ __host__ __forceinline__ vec3 trace_ray(
+    const vec3& ray_origin,
+    const vec3& ray_direction,
+    light* lights,
+    int num_lights,
+    const vec3& min,
+    const vec3& max,
+    const char* vdb_file,
+    density_sample* density_samples,
+    int num_density_samples)
+{
+    vec3 normal{0, 0, 0};
+    float t = intersect_cornell_box(ray_origin, ray_direction, lights, num_lights, normal);
+    float t_box = intersect_box(ray_origin, ray_direction, min, max);
+
+    if (t >= NO_INTERSECTION)
+        return vec3{0, 0, 0}; // miss
+
+    if (t_box > -0.5f)  // safer float comparison instead of t_box != -1
+        return render_volume(ray_origin, ray_direction, min, max, t_box, lights, num_lights, vdb_file, density_samples, num_density_samples);
+
+    return cornellBox(ray_origin, ray_direction, t, lights, num_lights, normal, min, max);
 }

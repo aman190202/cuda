@@ -30,7 +30,7 @@ __device__ __host__ vec3 toneMap(const vec3& color) {
 }
 
 // CUDA kernel to generate the image with a simple pinhole camera
-__global__ void generateImage(color* image, int width, int height, light* lights, int num_lights) 
+__global__ void generateImage(color* image, int width, int height, light* lights, int num_lights, vec3 min, vec3 max, const char* vdb_file, density_sample* d_density_samples, int num_density_samples) 
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= width * height) return;
@@ -55,15 +55,8 @@ __global__ void generateImage(color* image, int width, int height, light* lights
     float max_distance = 200.0f;
     float total_density = 0.0f;
     
-    // for (float t = 0; t < max_distance; t += step_size) {
-    //     vec3 sample_pos = ray_origin + ray_direction * t;
-    //     if (vdb_reader->isInsideVolume(sample_pos)) {
-    //         float density = vdb_reader->sampleDensity(sample_pos);
-    //         total_density += density * step_size;
-    //     }
-    // }
 
-    vec3 pixel_color = trace_ray(ray_origin, ray_direction, lights, num_lights);
+    vec3 pixel_color = trace_ray(ray_origin, ray_direction, lights, num_lights, min, max, vdb_file, d_density_samples, num_density_samples);
     
     // Apply density-based attenuation
     float attenuation = exp(-total_density);
@@ -100,15 +93,19 @@ int main(int argc, char* argv[])
     }
 
     const char* vdb_file = argv[1];
-    readAndPrintVDB(std::string(vdb_file));
+    readAndPrintVDB(vdb_file);
     int width  = 1000;
     int height = 1000;
     int total_pixels = width * height;
 
-    std::vector<light> lights = getLightsFromVDB(std::string(vdb_file));
+    std::vector<light> lights = getLightsFromVDB(vdb_file);
     std::cout << "Number of lights: " << lights.size() << std::endl;
     // float density = getDensityAtPosition(std::string(vdb_file), 0.0f, 0.0f, 0.0f);
     // std::cout << "Density at (0,0,0): " << density << std::endl;
+
+
+    std::vector<density_sample> density_samples = getDensitySamplesFromVDB(vdb_file);
+    std::cout << "Number of density samples: " << density_samples.size() << std::endl;  
 
     // Extract base filename without extension
     std::string input_file(vdb_file);
@@ -121,65 +118,53 @@ int main(int argc, char* argv[])
     std::filesystem::create_directories("output");
     std::string output_file = "scenes/" + base_name + ".png";
 
-    float density = getDensityAtPosition(std::string(vdb_file), vec3{0.0f, 0.0f, 0.0f});
-    std::cout << "Density at (0,0,0): " << density << std::endl;
+    vec3 min, max;
+    getScaledBoundingBox(vdb_file, min, max);
+    std::cout << "Min: " << min << std::endl;
+    std::cout << "Max: " << max << std::endl;   
 
-    // std::vector<light> lights;
+    // Get density range
+    float minDensity, maxDensity;
+    vec3 minPos, maxPos;
+    getDensityRange(vdb_file, minDensity, maxDensity, minPos, maxPos);
+    std::cout << "Density range: [" << minDensity << ", " << maxDensity << "]" << std::endl;
+    std::cout << "Min density position: (" << minPos.x << ", " << minPos.y << ", " << minPos.z << ")" << std::endl;
+    std::cout << "Max density position: (" << maxPos.x << ", " << maxPos.y << ", " << maxPos.z << ")" << std::endl;
 
-    // // Load from binary file
-    // std::ifstream lightFile(lights_file, std::ios::binary);
-    // if (!lightFile) {
-    //     std::cerr << "Failed to open " << lights_file << std::endl;
-    //     return 1;
-    // }
-
-    // // Determine file size
-    // lightFile.seekg(0, std::ios::end);
-    // std::streamsize size = lightFile.tellg();
-    // lightFile.seekg(0, std::ios::beg);
-
-    // if (size <= 0 || size % sizeof(light) != 0) {
-    //     std::cerr << "Invalid file size or format" << std::endl;
-    //     return 1;
-    // }
-
-    // // Resize and read into vector
-    // lights.resize(size / sizeof(light));
-    // if (!lightFile.read(reinterpret_cast<char*>(lights.data()), size)) {
-    //     std::cerr << "Error reading from light.bin" << std::endl;
-    //     return 1;
-    // }
 
     int num_lights = static_cast<int>(lights.size());
+    int num_density_samples = static_cast<int>(density_samples.size());
     std::cout << "Number of lights: " << num_lights << std::endl;
+    std::cout << "Number of density samples: " << num_density_samples << std::endl;
 
-    // Get volume bounds if needed
-
+    vec3 testPos = vec3{0, -49, 0}; // replace with known world-space center
+    float d = getDensityAtPosition(vdb_file, testPos);
+    std::cout << "Density at (0,0,0): " << d << std::endl;
     // Host image buffer
     std::vector<color> Image(total_pixels);
 
-    // Load VDB file
-    // VDBReader* vdb_reader = new VDBReader();
-    // if (!vdb_reader->loadFile(vdb_file)) {
-    //     std::cerr << "Failed to load VDB file: " << vdb_file << std::endl;
-    //     return 1;
-    // }
 
     // Allocate device memory
     color* d_image;
     light* d_lights;
+    density_sample* d_density_samples;
     // VDBReader* d_vdb_reader;
     cudaMalloc(&d_image, total_pixels * sizeof(color));
     cudaMalloc(&d_lights, num_lights * sizeof(light));
+    cudaMalloc(&d_density_samples, density_samples.size() * sizeof(density_sample));
     // cudaMalloc(&d_vdb_reader, sizeof(VDBReader));
     cudaMemcpy(d_lights, lights.data(), num_lights * sizeof(light), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_density_samples, density_samples.data(), density_samples.size() * sizeof(density_sample), cudaMemcpyHostToDevice);
     // cudaMemcpy(d_vdb_reader, vdb_reader, sizeof(VDBReader), cudaMemcpyHostToDevice);
 
     // Launch kernel
     int blockSize = 256;
     int numBlocks = (total_pixels + blockSize - 1) / blockSize;
-    generateImage<<<numBlocks, blockSize>>>(d_image, width, height, d_lights, num_lights);
+
+    generateImage<<<numBlocks, blockSize>>>(d_image, width, height, d_lights, num_lights, min, max, vdb_file, d_density_samples, num_density_samples);
     cudaDeviceSynchronize();
+
+
 
     // Copy back and save
     cudaMemcpy(Image.data(), d_image, total_pixels * sizeof(color), cudaMemcpyDeviceToHost);
@@ -189,6 +174,7 @@ int main(int argc, char* argv[])
     // Cleanup
     cudaFree(d_image);
     cudaFree(d_lights);
+    cudaFree(d_density_samples);
     // cudaFree(d_vdb_reader);
     return 0;
 }

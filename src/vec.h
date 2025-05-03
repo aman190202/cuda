@@ -75,6 +75,12 @@ inline __device__ __host__ bool operator==(const vec3& a, const vec3& b){
     return a.x == b.x && a.y == b.y && a.z == b.z;
 }      
 
+// Stream output operator for vec3
+inline std::ostream& operator<<(std::ostream& os, const vec3& v) {
+    os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
+    return os;
+}
+
 #endif // VEC_H
 
 

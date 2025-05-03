@@ -6,7 +6,7 @@
 #SBATCH --partition=gpu               
 #SBATCH --gres=gpu:1                  
 #SBATCH --mem=16G                     
-#SBATCH --cpus-per-task=12  
+#SBATCH --cpus-per-task=4
 
 # Load necessary modules
 
@@ -44,12 +44,12 @@ module load  gcc/10.1.0-mojgbnp
 
 
 # latest compilation code
-nvcc -std=c++17 main.cu src/vdb_reader.cu -o render \
-    -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib \
-    -Xlinker -rpath -Xlinker $CONDA_PREFIX/lib \
-    -lopenvdb -ltbb -lblosc -lboost_system -lboost_iostreams -lboost_filesystem -w
+# nvcc -std=c++17 main.cu src/vdb_reader.cu -o render \
+#     -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib \
+#     -Xlinker -rpath -Xlinker $CONDA_PREFIX/lib \
+#     -lopenvdb -ltbb -lblosc -lboost_system -lboost_iostreams -lboost_filesystem -w
 
-echo "Compilation complete!"
+# echo "Compilation complete!"
 
 # Now compile CUDA code
 # nvcc main.cu -o render
@@ -67,11 +67,12 @@ echo "Compilation complete!"
 
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 export LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so.6
-for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
-    if [ -f "$file" ]; then
-        echo "Processing $file..."
-        ./render "$file"
-    fi
-done
+# # for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
+# #     if [ -f "$file" ]; then
+# #         echo "Processing $file..."
+# #         ./render "$file"
+# #     fi
+# # done
+./render v1/untitled.filecache1_v1.0050.vdb
 
 echo "All files processed!" 

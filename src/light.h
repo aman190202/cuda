@@ -15,4 +15,9 @@ struct light
     float intensity;
 };
 
+struct density_sample {
+    vec3 position;
+    float value;
+};
+
 #endif

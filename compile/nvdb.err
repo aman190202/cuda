@@ -1,2 +1,1 @@
-/usr/bin/ld: warning: libtbb.so.2, needed by /users/aagar133/.conda/envs/graphics/lib/libopenvdb.so, may conflict with libtbb.so.12
-slurmstepd: error: *** JOB 11212639 ON gpu2114 CANCELLED AT 2025-04-30T12:17:30 ***
+/var/spool/slurmd/job11237315/slurm_script: line 76: 2979831 Segmentation fault      (core dumped) ./render v1/untitled.filecache1_v1.0050.vdb
