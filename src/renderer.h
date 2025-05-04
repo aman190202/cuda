@@ -1,9 +1,66 @@
 #include "vec.h"
 #include "light.h"
 #include "vdb_reader.h"
+#include <curand_kernel.h>
 
 #define NO_INTERSECTION 99999.0f
 #define EPSILON           1e-6f
+
+
+
+__host__ __device__ float getDensityAtPositionDevice(float* grid, int nx, int ny, int nz, vec3 grid_min, vec3 grid_max, vec3 grid_center, vec3 pos_scene) 
+{
+    // Hardcoded
+    const vec3 targetBase = vec3{0.0f, -50.0f, 0.0f};
+    const float scaleFactor = 2.0f;
+
+    // Scene → Original world
+    vec3 pos_world = (pos_scene - targetBase) / scaleFactor + grid_center;
+
+    // World → Grid local
+    float gx = ((pos_world.x - grid_min.x) / (grid_max.x - grid_min.x)) * (nx - 1);
+    float gy = ((pos_world.y - grid_min.y) / (grid_max.y - grid_min.y)) * (ny - 1);
+    float gz = ((pos_world.z - grid_min.z) / (grid_max.z - grid_min.z)) * (nz - 1);
+
+    gx = fmaxf(0.0f, fminf(gx, nx - 1.001f));
+    gy = fmaxf(0.0f, fminf(gy, ny - 1.001f));
+    gz = fmaxf(0.0f, fminf(gz, nz - 1.001f));
+
+    int x0 = floorf(gx);
+    int y0 = floorf(gy);
+    int z0 = floorf(gz);
+    int x1 = x0 + 1;
+    int y1 = y0 + 1;
+    int z1 = z0 + 1;
+
+    float xd = gx - x0;
+    float yd = gy - y0;
+    float zd = gz - z0;
+
+    #define GRID(x,y,z) grid[(x) + (y) * nx + (z) * nx * ny]
+
+    float c000 = GRID(x0, y0, z0);
+    float c100 = GRID(x1, y0, z0);
+    float c010 = GRID(x0, y1, z0);
+    float c110 = GRID(x1, y1, z0);
+    float c001 = GRID(x0, y0, z1);
+    float c101 = GRID(x1, y0, z1);
+    float c011 = GRID(x0, y1, z1);
+    float c111 = GRID(x1, y1, z1);
+
+    float c00 = c000 * (1 - xd) + c100 * xd;
+    float c01 = c001 * (1 - xd) + c101 * xd;
+    float c10 = c010 * (1 - xd) + c110 * xd;
+    float c11 = c011 * (1 - xd) + c111 * xd;
+
+    float c0 = c00 * (1 - yd) + c10 * yd;
+    float c1 = c01 * (1 - yd) + c11 * yd;
+
+    return c0 * (1 - zd) + c1 * zd;
+}
+
+
+
 
 // intersect the five faces of a Cornell box (roof, floor, left, right, back)
 // returns the smallest positive t, and writes the hit normal
@@ -186,85 +243,136 @@ __device__ __host__ float intersect_box(const vec3& o, const vec3& d, const vec3
     return tmin;
 }
 
-// Helpers
-__device__ __host__ __forceinline__ bool is_out_of_bounds(const vec3& point, const vec3& min, const vec3& max) {
-    return (point.x < min.x || point.x > max.x ||
-            point.y < min.y || point.y > max.y ||
-            point.z < min.z || point.z > max.z);
+// Helper function for random light sampling (device only)
+__device__ int getRandomLightIndex(curandState_t* state, int num_lights) {
+    return (int)(curand_uniform(state) * num_lights) % num_lights;
 }
 
-// Safe density fetch (you should replace this with real VDB safe access logic)
-__device__ __host__ __forceinline__ float getDensityAtPositionSafe(const char* vdb_file, const vec3& point, const vec3& min, const vec3& max) {
-    if (is_out_of_bounds(point, min, max))
-        return -1.0f;  // Out of bounds
-
-    float density = getDensityAtPosition(vdb_file, point);
-
-    // Protect against invalid values (NaN, inf)
-    if (!isfinite(density))
-        return -1.0f;
-
-    return density;
-}
-
-// Volume rendering (robust, skips invalid samples)
-__device__ __host__ __forceinline__ vec3 render_volume(
+__device__ __forceinline__ vec3 render_volume(
     const vec3& o, const vec3& d,
     const vec3& min, const vec3& max,
     float t_near,
     light* lights, int num_lights,
-    const char* vdb_file,
-    density_sample* density_samples,
-    int num_density_samples)
+    float* d_density_grid,
+    int nx,
+    int ny,
+    int nz,
+    const vec3& center)
 {
-    const float step_size    = 1.0f;
+    const float step_size = 0.1f;
     const float max_distance = 50.0f;
-    float accumulated_density = 0.0f;
+    const float sigma_s = 0.5f;  // scattering
+    const float sigma_a = 0.1f;  // absorption
+    const float sigma_t = sigma_s + sigma_a;
+    const float light_radius = 2.0f;
 
-    for (float t = 0.0f; t < max_distance; t += step_size) {
-        vec3 p = o + d * (t_near + t);
+    vec3 color = vec3{0, 0, 0};
+    vec3 transmittance = vec3{1.0f};
 
-        // skip if outside world‐space box
-        if (p.x < min.x || p.x > max.x ||
-            p.y < min.y || p.y > max.y ||
-            p.z < min.z || p.z > max.z)
-            continue;
+    vec3 ray_origin = o;
+    vec3 ray_dir = d;
+    float t_total = 0.0f;
 
-        // find the nearest density sample
-        float nearest_distance = 99999.0f;
-        density_sample nearest_sample = {vec3(0,0,0), 0.0f};  // Initialize with default values
-        for (int i = 0; i < num_density_samples; i++) {
-            float distance = length(p - density_samples[i].position);
-            if (distance < nearest_distance && distance < 0.1f) {
-                nearest_distance = distance;
-                nearest_sample = density_samples[i];
+    for (int bounce = 0; bounce < 20; ++bounce)
+    {
+        while (t_total < max_distance) 
+        {
+            vec3 p = ray_origin + ray_dir * t_total;
+
+            // If out of volume bounds → hit Cornell box
+            if (p.x < min.x || p.x > max.x ||
+                p.y < min.y || p.y > max.y ||
+                p.z < min.z || p.z > max.z)
+            {
+                vec3 normal{0, 0, 0};
+                float t_box = intersect_cornell_box(ray_origin, ray_dir, lights, num_lights, normal);
+                return color + transmittance * cornellBox(ray_origin, ray_dir, t_box, lights, num_lights, normal, min, max);
             }
+
+            float density = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, p);
+
+            // Self emission (glow in dense areas) → ALWAYS
+            if (density > 0.1f)
+            {
+                vec3 self_emission = vec3(density * 0.2f);
+                color = color + transmittance * self_emission;
+            }
+
+            // If sufficiently dense → check nearby lights
+            if (density >= 0.2f)
+            {
+                vec3 light_contrib = vec3{0, 0, 0};
+                bool has_nearby_light = false;
+
+                for (int i = 0; i < num_lights; ++i)
+                {
+                    light l = lights[i];
+                    float dist = length(l.position - p);
+
+                    if (dist < light_radius * 5.0f)  // sampling radius
+                    {
+                        has_nearby_light = true;
+                        float attenuation = 1.0f / (1.0f + dist * dist * 0.05f); // softer attenuation
+                        light_contrib = light_contrib + l.col * l.intensity * attenuation;
+                    }
+                }
+
+                if (has_nearby_light)
+                {
+                    color = color + transmittance * light_contrib * density;
+
+                    // Update transmittance
+                    float extinction = density * sigma_t * step_size;
+                    transmittance = transmittance * expf(-extinction);
+
+                    // Prevent transmittance from becoming zero
+                    transmittance.x = fmaxf(transmittance.x, 0.01f);
+                    transmittance.y = fmaxf(transmittance.y, 0.01f);
+                    transmittance.z = fmaxf(transmittance.z, 0.01f);
+
+                    // Slightly randomize direction (optional -> here, continue same)
+                    ray_origin = p;
+                    t_total = 0.0f;
+
+                    // Continue to next bounce
+                    break;
+                }
+            }
+
+            // Update transmittance even when no nearby light
+            float extinction = density * sigma_t * step_size;
+            transmittance = transmittance * expf(-extinction);
+
+            // Clamp transmittance
+            transmittance.x = fmaxf(transmittance.x, 0.01f);
+            transmittance.y = fmaxf(transmittance.y, 0.01f);
+            transmittance.z = fmaxf(transmittance.z, 0.01f);
+
+            t_total += step_size;
         }
 
-        float density = nearest_sample.value;
-        accumulated_density += density;
+        // Ray out of volume after stepping
+        if (t_total >= max_distance)
+            break;
     }
 
-    if (accumulated_density > 0.0f)
-        return vec3{1,1,1};
-    else
-        return vec3{0,0,0};
+    return color;
 }
 
 
-
-
 // Ray trace logic (fixed t_box check)
-__device__ __host__ __forceinline__ vec3 trace_ray(
+__device__ __forceinline__ vec3 trace_ray(
     const vec3& ray_origin,
     const vec3& ray_direction,
     light* lights,
     int num_lights,
-    const vec3& min,
-    const vec3& max,
-    const char* vdb_file,
-    density_sample* density_samples,
-    int num_density_samples)
+    vec3& min,
+    vec3& max,
+    vec3& center,
+    float* d_density_grid,
+    int nx,
+    int ny,
+    int nz)
 {
     vec3 normal{0, 0, 0};
     float t = intersect_cornell_box(ray_origin, ray_direction, lights, num_lights, normal);
@@ -273,8 +381,8 @@ __device__ __host__ __forceinline__ vec3 trace_ray(
     if (t >= NO_INTERSECTION)
         return vec3{0, 0, 0}; // miss
 
-    if (t_box > -0.5f)  // safer float comparison instead of t_box != -1
-        return render_volume(ray_origin, ray_direction, min, max, t_box, lights, num_lights, vdb_file, density_samples, num_density_samples);
+    if (t_box != -1.0f)  // safer float comparison instead of t_box != -1
+        return render_volume(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center);
 
     return cornellBox(ray_origin, ray_direction, t, lights, num_lights, normal, min, max);
 }

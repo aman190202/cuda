@@ -1,37 +1,16 @@
 ## SLURM PROLOG ###############################################################
-##    Job ID : 11237315
+##    Job ID : 11247536
 ##  Job Name : installation
 ##  Nodelist : gpu2007
 ##      CPUs : 
 ##  Mem/Node : 16384 MB
 ## Directory : /oscar/scratch/aagar133/cuda
-##   Job Started : Fri May  2 09:14:24 PM EDT 2025
+##   Job Started : Sat May  3 05:49:19 PM EDT 2025
 ###############################################################################
-Found grid: density
-Grid bbox: [26, 0, 27] -> [374, 380, 332]
-Found grid: flame
-Grid bbox: [27, 0, 28] -> [373, 380, 332]
-Found grid: temperature
-Grid bbox: [25, 0, 27] -> [376, 381, 334]
 Original bounding box (world coordinates):
   Min: (-15.5069, 0.00998268, -11.698)
   Max: (10.8181, 28.585, 11.327)
-Flames grid value range: [1.00001e-05, 1.40893]
-Volume scaled by factor: 2
-New base position: (0, -50, 0)
 Number of lights: 7340017
-Original bounding box (world coordinates):
-  Min: (-15.4319, 0.00998268, -11.698)
-  Max: (10.6681, 28.51, 11.177)
-Density grid value range: [0.00500001, 1]
-Volume scaled by factor: 2
-New base position: (0, -50, 0)
-Number of density samples: 7211911
 Min: (-26.1, -50, -22.875)
 Max: (26.1, 7, 22.875)
-Density range: [0.00500001, 1]
-Min density position: (7.65, -12.2, 14.175)
-Max density position: (-21.3, -1.4, -7.875)
-Number of lights: 7340017
-Number of density samples: 7211911
-All files processed!
+Center: (0, -21.5, 0)

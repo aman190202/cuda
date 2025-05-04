@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=installation
-#SBATCH --output=compile/nvdb.out
-#SBATCH --error=compile/nvdb.err
+#SBATCH --output=compile/nvdb2.out
+#SBATCH --error=compile/nvdb2.err
 #SBATCH --time=02:00:00               
 #SBATCH --partition=gpu               
 #SBATCH --gres=gpu:1                  
@@ -42,12 +42,12 @@ module load  gcc/10.1.0-mojgbnp
 
 # Compile the renderer
 
-
+rm -rf ./render
 # latest compilation code
-# nvcc -std=c++17 main.cu src/vdb_reader.cu -o render \
-#     -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib \
-#     -Xlinker -rpath -Xlinker $CONDA_PREFIX/lib \
-#     -lopenvdb -ltbb -lblosc -lboost_system -lboost_iostreams -lboost_filesystem -w
+nvcc -std=c++17 main.cu src/vdb_reader.cu -o render \
+    -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib \
+    -Xlinker -rpath -Xlinker $CONDA_PREFIX/lib \
+    -lopenvdb -ltbb -lblosc -lboost_system -lboost_iostreams -lboost_filesystem -w
 
 # echo "Compilation complete!"
 
@@ -73,6 +73,6 @@ export LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so.6
 # #         ./render "$file"
 # #     fi
 # # done
-./render v1/untitled.filecache1_v1.0050.vdb
+./render v1/untitled.filecache1_v1.0007.vdb
 
 echo "All files processed!" 

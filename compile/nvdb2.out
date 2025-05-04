@@ -1,0 +1,9 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 11249775
+##  Job Name : installation
+##  Nodelist : gpu2001
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/scratch/aagar133/cuda
+##   Job Started : Sat May  3 08:53:22 PM EDT 2025
+###############################################################################

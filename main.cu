@@ -15,8 +15,6 @@
 
 constexpr float PI = 3.14159265358979323846f;
 
-
-
 // Simple Reinhard tone mapping
 __device__ __host__ vec3 toneMap(const vec3& color) {
     // Reinhard tone mapping
@@ -30,7 +28,7 @@ __device__ __host__ vec3 toneMap(const vec3& color) {
 }
 
 // CUDA kernel to generate the image with a simple pinhole camera
-__global__ void generateImage(color* image, int width, int height, light* lights, int num_lights, vec3 min, vec3 max, const char* vdb_file, density_sample* d_density_samples, int num_density_samples) 
+__global__ void generateImage(color* image, int width, int height, light* lights, int num_lights, vec3 min, vec3 max, vec3 center, float* d_density_grid, int nx, int ny, int nz) 
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= width * height) return;
@@ -43,24 +41,28 @@ __global__ void generateImage(color* image, int width, int height, light* lights
     float fov = PI / 3.0f;           // 60° field of view
     float scale = tanf(fov * 0.5f);
 
-    // normalized device coordinates [−1,1]
-    float u = (2.0f * (i + 0.5f) / float(width)  - 1.0f) * aspect * scale;
-    float v = (1.0f - 2.0f * (j + 0.5f) / float(height)) * scale;
+    // Initialize random state for this thread
+    curandState_t state;
+    curand_init(clock64(), idx, 0, &state);
 
-    vec3 ray_origin = vec3{0.0f, 0.0f, 100.0f};
-    vec3 ray_direction = normalize(vec3{u, v, -1.0f});
+    // Take multiple samples per pixel
+    const int num_samples = 10;
+    vec3 accumulated_color = vec3{0, 0, 0};
 
-    // Sample density along the ray
-    float step_size = 1.0f;
-    float max_distance = 200.0f;
-    float total_density = 0.0f;
-    
+    for (int s = 0; s < num_samples; s++) {
+        // Add jitter to pixel coordinates
+        float u = (2.0f * (i + 0.5f + curand_uniform(&state)) / float(width)  - 1.0f) * aspect * scale;
+        float v = (1.0f - 2.0f * (j + 0.5f + curand_uniform(&state)) / float(height)) * scale;
 
-    vec3 pixel_color = trace_ray(ray_origin, ray_direction, lights, num_lights, min, max, vdb_file, d_density_samples, num_density_samples);
-    
-    // Apply density-based attenuation
-    float attenuation = exp(-total_density);
-    pixel_color = pixel_color * attenuation;
+        vec3 ray_origin = vec3{0.0f, 0.0f, 100.0f};
+        vec3 ray_direction = normalize(vec3{u, v, -1.0f});
+        
+        vec3 sample_color = trace_ray(ray_origin, ray_direction, lights, num_lights, min, max, center, d_density_grid, nx, ny, nz);
+        accumulated_color = accumulated_color + sample_color;
+    }
+
+    // Average the samples
+    vec3 pixel_color = accumulated_color * (1.0f / num_samples);
     
     // Apply tone mapping
     pixel_color = toneMap(pixel_color);
@@ -87,94 +89,79 @@ void saveImage(const std::vector<color>& image, int width, int height, const cha
 
 int main(int argc, char* argv[])
 {
+
+    // Input file shenanigans
     if (argc != 2) {    
         std::cerr << "Usage: " << argv[0] << " <vdb_file>" << std::endl;
         return 1;
     }
 
     const char* vdb_file = argv[1];
-    readAndPrintVDB(vdb_file);
     int width  = 1000;
     int height = 1000;
     int total_pixels = width * height;
 
+    // Light and density grid setup 
+
     std::vector<light> lights = getLightsFromVDB(vdb_file);
-    std::cout << "Number of lights: " << lights.size() << std::endl;
-    // float density = getDensityAtPosition(std::string(vdb_file), 0.0f, 0.0f, 0.0f);
-    // std::cout << "Density at (0,0,0): " << density << std::endl;
+    int num_lights = static_cast<int>(lights.size());
+    std::cout << "Number of lights: " << num_lights << std::endl;
+
+    vec3 min, max;
+    getScaledBoundingBox(vdb_file, min, max);
+    vec3 center = (min + max) / 2;
+
+    std::cout << "Min: " << min << std::endl;
+    std::cout << "Max: " << max << std::endl;
+    std::cout << "Center: " << center << std::endl;
+
+    int nx, ny, nz;
+    std::vector<float> denseGrid = getDenseGridFromVDB(vdb_file, nx, ny, nz);
+
+    float* d_density_grid;
+    size_t gridSize = nx * ny * nz * sizeof(float);
+
+    // sanity check
+    std::cout << "Grid dimensions: " << nx << " " << ny << " " << nz << std::endl;
+    std::cout << "Grid size (bytes): " << gridSize << std::endl;
+
+    
+    // Allocate device memory
+    color* d_image;
+    light* d_lights;
+    cudaMalloc(&d_image, total_pixels * sizeof(color));
+    cudaMalloc(&d_lights, num_lights * sizeof(light));
+    cudaMalloc(&d_density_grid, gridSize);
+    cudaMemcpy(d_lights, lights.data(), num_lights * sizeof(light), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_density_grid, denseGrid.data(), gridSize, cudaMemcpyHostToDevice);
+
+    // // Launch kernel
+    int blockSize = 256;
+    int numBlocks = (total_pixels + blockSize - 1) / blockSize;
+
+    std::vector<color> Image(total_pixels);
 
 
-    std::vector<density_sample> density_samples = getDensitySamplesFromVDB(vdb_file);
-    std::cout << "Number of density samples: " << density_samples.size() << std::endl;  
 
-    // Extract base filename without extension
+    generateImage<<<numBlocks, blockSize>>>(d_image, width, height, d_lights, num_lights, min, max, center, d_density_grid, nx, ny, nz);
+    cudaDeviceSynchronize();
+
     std::string input_file(vdb_file);
     size_t last_slash = input_file.find_last_of("/\\");
     std::string filename = (last_slash != std::string::npos) ? input_file.substr(last_slash + 1) : input_file;
     size_t last_dot = filename.find_last_of(".");
     std::string base_name = (last_dot != std::string::npos) ? filename.substr(0, last_dot) : filename;
-    
-    // Ensure output directory exists
-    std::filesystem::create_directories("output");
     std::string output_file = "scenes/" + base_name + ".png";
-
-    vec3 min, max;
-    getScaledBoundingBox(vdb_file, min, max);
-    std::cout << "Min: " << min << std::endl;
-    std::cout << "Max: " << max << std::endl;   
-
-    // Get density range
-    float minDensity, maxDensity;
-    vec3 minPos, maxPos;
-    getDensityRange(vdb_file, minDensity, maxDensity, minPos, maxPos);
-    std::cout << "Density range: [" << minDensity << ", " << maxDensity << "]" << std::endl;
-    std::cout << "Min density position: (" << minPos.x << ", " << minPos.y << ", " << minPos.z << ")" << std::endl;
-    std::cout << "Max density position: (" << maxPos.x << ", " << maxPos.y << ", " << maxPos.z << ")" << std::endl;
-
-
-    int num_lights = static_cast<int>(lights.size());
-    int num_density_samples = static_cast<int>(density_samples.size());
-    std::cout << "Number of lights: " << num_lights << std::endl;
-    std::cout << "Number of density samples: " << num_density_samples << std::endl;
-
-    vec3 testPos = vec3{0, -49, 0}; // replace with known world-space center
-    float d = getDensityAtPosition(vdb_file, testPos);
-    std::cout << "Density at (0,0,0): " << d << std::endl;
-    // Host image buffer
-    std::vector<color> Image(total_pixels);
-
-
-    // Allocate device memory
-    color* d_image;
-    light* d_lights;
-    density_sample* d_density_samples;
-    // VDBReader* d_vdb_reader;
-    cudaMalloc(&d_image, total_pixels * sizeof(color));
-    cudaMalloc(&d_lights, num_lights * sizeof(light));
-    cudaMalloc(&d_density_samples, density_samples.size() * sizeof(density_sample));
-    // cudaMalloc(&d_vdb_reader, sizeof(VDBReader));
-    cudaMemcpy(d_lights, lights.data(), num_lights * sizeof(light), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_density_samples, density_samples.data(), density_samples.size() * sizeof(density_sample), cudaMemcpyHostToDevice);
-    // cudaMemcpy(d_vdb_reader, vdb_reader, sizeof(VDBReader), cudaMemcpyHostToDevice);
-
-    // Launch kernel
-    int blockSize = 256;
-    int numBlocks = (total_pixels + blockSize - 1) / blockSize;
-
-    generateImage<<<numBlocks, blockSize>>>(d_image, width, height, d_lights, num_lights, min, max, vdb_file, d_density_samples, num_density_samples);
-    cudaDeviceSynchronize();
-
-
 
     // Copy back and save
     cudaMemcpy(Image.data(), d_image, total_pixels * sizeof(color), cudaMemcpyDeviceToHost);
     saveImage(Image, width, height, output_file.c_str());
     std::cout << "Image saved to: " << output_file << std::endl;
 
-    // Cleanup
+    // // Cleanup
     cudaFree(d_image);
     cudaFree(d_lights);
-    cudaFree(d_density_samples);
-    // cudaFree(d_vdb_reader);
+    cudaFree(d_density_grid);
+
     return 0;
 }
