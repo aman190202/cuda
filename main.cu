@@ -117,6 +117,7 @@ int main(int argc, char* argv[])
 
     int nx, ny, nz;
     std::vector<float> denseGrid = getDenseGridFromVDB(vdb_file, nx, ny, nz);
+    denseGrid = gaussianSmooth(denseGrid, nx, ny, nz, 3.0f);
 
     float* d_density_grid;
     size_t gridSize = nx * ny * nz * sizeof(float);

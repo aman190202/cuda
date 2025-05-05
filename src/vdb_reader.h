@@ -5,3 +5,4 @@ void readAndPrintVDB(const char* filename);
 std::vector<light> getLightsFromVDB(const char* filename);
 void getScaledBoundingBox(const char* filename, vec3& outMin, vec3& outMax);
 std::vector<float> getDenseGridFromVDB(const char* vdb_file, int& nx, int& ny, int& nz);
+std::vector<float> gaussianSmooth(const std::vector<float>& grid, int nx, int ny, int nz, float sigma);

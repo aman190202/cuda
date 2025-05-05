@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=installation
-#SBATCH --output=compile/nvdb2.out
-#SBATCH --error=compile/nvdb2.err
-#SBATCH --time=02:00:00               
+#SBATCH --job-name=plumes
+#SBATCH --output=compile/nvdb3.out
+#SBATCH --error=compile/nvdb3.err
+#SBATCH --time=12:00:00               
 #SBATCH --partition=gpu               
 #SBATCH --gres=gpu:1                  
 #SBATCH --mem=16G                     
@@ -42,14 +42,14 @@ module load  gcc/10.1.0-mojgbnp
 
 # Compile the renderer
 
-rm -rf ./render
-# latest compilation code
+# rm -rf ./render
+# # latest compilation code
 nvcc -std=c++17 main.cu src/vdb_reader.cu -o render \
     -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib \
     -Xlinker -rpath -Xlinker $CONDA_PREFIX/lib \
     -lopenvdb -ltbb -lblosc -lboost_system -lboost_iostreams -lboost_filesystem -w
 
-# echo "Compilation complete!"
+echo "Compilation complete!"
 
 # Now compile CUDA code
 # nvcc main.cu -o render
@@ -67,12 +67,12 @@ nvcc -std=c++17 main.cu src/vdb_reader.cu -o render \
 
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 export LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so.6
-# # for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
-# #     if [ -f "$file" ]; then
-# #         echo "Processing $file..."
-# #         ./render "$file"
-# #     fi
-# # done
-./render v1/untitled.filecache1_v1.0007.vdb
+# for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
+#     if [ -f "$file" ]; then
+#         echo "Processing $file..."
+#         ./render "$file"
+#     fi
+# done
+./render v1/untitled.filecache1_v1.0013.vdb
 
 echo "All files processed!" 

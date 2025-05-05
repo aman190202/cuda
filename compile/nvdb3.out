@@ -1,0 +1,19 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 11287323
+##  Job Name : plumes
+##  Nodelist : gpu2010
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/scratch/aagar133/cuda
+##   Job Started : Mon May  5 01:14:36 PM EDT 2025
+###############################################################################
+Compilation complete!
+Original bounding box (world coordinates):
+  Min: (-7.03194, 0.00998268, -4.72296)
+  Max: (4.66806, 6.38498, 5.10204)
+Number of lights: 734818
+Min: (-11.55, -50, -9.6)
+Max: (11.55, -37.25, 9.6)
+Center: (0, -43.625, 0)
+Grid dimensions: 155 86 129
+Grid size (bytes): 6878280

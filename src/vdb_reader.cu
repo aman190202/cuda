@@ -291,6 +291,52 @@ std::vector<float> getDenseGridFromVDB(const char* vdb_file, int& nx, int& ny, i
     return denseGrid;
 }
 
+std::vector<float> gaussianSmooth(const std::vector<float>& grid, int nx, int ny, int nz, float sigma) {
+    int kernel_radius = 1; // 3x3x3 kernel
+    std::vector<float> kernel(27);
+    
+    // Generate Gaussian kernel
+    float sum = 0.0f;
+    for (int z = -kernel_radius; z <= kernel_radius; ++z) {
+        for (int y = -kernel_radius; y <= kernel_radius; ++y) {
+            for (int x = -kernel_radius; x <= kernel_radius; ++x) {
+                float value = expf(-(x * x + y * y + z * z) / (2.0f * sigma * sigma));
+                kernel[(z + kernel_radius) * 9 + (y + kernel_radius) * 3 + (x + kernel_radius)] = value;
+                sum += value;
+            }
+        }
+    }
+    for (float& v : kernel) v /= sum;
+
+    std::vector<float> smoothed(grid.size(), 0.0f);
+
+    // Apply filter
+    for (int z = 0; z < nz; ++z) {
+        for (int y = 0; y < ny; ++y) {
+            for (int x = 0; x < nx; ++x) {
+                float accum = 0.0f;
+                for (int kz = -kernel_radius; kz <= kernel_radius; ++kz) {
+                    for (int ky = -kernel_radius; ky <= kernel_radius; ++ky) {
+                        for (int kx = -kernel_radius; kx <= kernel_radius; ++kx) {
+                            int sx = x + kx;
+                            int sy = y + ky;
+                            int sz = z + kz;
+                            if (sx >= 0 && sx < nx && sy >= 0 && sy < ny && sz >= 0 && sz < nz) {
+                                accum += grid[sx + sy * nx + sz * nx * ny] * 
+                                         kernel[(kz + kernel_radius) * 9 + (ky + kernel_radius) * 3 + (kx + kernel_radius)];
+                            }
+                        }
+                    }
+                }
+                smoothed[x + y * nx + z * nx * ny] = accum;
+            }
+        }
+    }
+
+
+    return smoothed;
+}
+
 
 // std::vector<float> getDenseGridFromVDB(const char* vdb_file, int& nx, int& ny, int& nz) 
 // {
