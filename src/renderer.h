@@ -3,18 +3,45 @@
 #include "vdb_reader.h"
 #include "volume.h"
 #include <curand_kernel.h>
+#include "kdtree.h"
 
 #define NO_INTERSECTION 99999.0f
 #define EPSILON           1e-6f
 
-
-
-
-
-
-
 // intersect the five faces of a Cornell box (roof, floor, left, right, back)
 // returns the smallest positive t, and writes the hit normal
+
+
+__device__ __host__ float intersect_box(const vec3& o, const vec3& d, const vec3& min, const vec3& max)
+{
+    // Calculate inverse direction to avoid division
+
+    vec3 inv_d = vec3(1.0f) / d;
+    
+    // Calculate t values for each slab
+    float t1 = (min.x - o.x) * inv_d.x;
+    float t2 = (max.x - o.x) * inv_d.x;
+    float t3 = (min.y - o.y) * inv_d.y;
+    float t4 = (max.y - o.y) * inv_d.y;
+    float t5 = (min.z - o.z) * inv_d.z;
+    float t6 = (max.z - o.z) * inv_d.z;
+    
+    // Find min and max t values for each axis
+    float tmin = fmaxf(fmaxf(fminf(t1, t2), fminf(t3, t4)), fminf(t5, t6));
+    float tmax = fminf(fminf(fmaxf(t1, t2), fmaxf(t3, t4)), fmaxf(t5, t6));
+    
+    // If tmax < 0, ray is intersecting but in the opposite direction
+    if (tmax < 0) return -1.0f;
+    
+    // If tmin > tmax, ray doesn't intersect the box
+    if (tmin > tmax) return -1.0f;
+    
+    // Return the first intersection point (tmin)
+    return tmin;
+}
+
+
+
 __device__ __host__ float intersect_cornell_box(
     const vec3& o, const vec3& d,
     light* lights, int num_lights,
@@ -91,12 +118,17 @@ __device__ __host__ vec3 light_interaction(light l, vec3 normal, vec3 intersecti
 __device__ __host__ vec3 cornellBox(
     const vec3&    ray_origin,
     const vec3&    ray_direction,
-    float           t,
+    float          t,
     light*         lights,
     int            num_lights,
     const vec3&    normal,
     const vec3&    min,
-    const vec3&    max)
+    const vec3&    max_l,
+    float*         d_density_grid,
+    int            nx,
+    int            ny,
+    int            nz,
+    const vec3&    center)
 {
     vec3 intersection_point = ray_origin + ray_direction * t;
     vec3 wall_color = vec3{0,0,0};
@@ -116,10 +148,14 @@ __device__ __host__ vec3 cornellBox(
 
     // Accumulate lighting from all lights
     vec3 final_color = vec3{0,0,0};
-    for (int i = 0; i < num_lights; i++) {
-        final_color = final_color + light_interaction(lights[i], normal, intersection_point, wall_color);
-    }
+    
+    vec3 direction = center - intersection_point;
+    normalize(direction);
 
+    float box_intersection = intersect_box(ray_origin, direction, min, max_l);
+    float attenuation = 1.0f / (box_intersection * box_intersection);
+    float light_intensity = max(dot(normal, direction), 0.0f);
+    final_color =  light_intensity * wall_color * render_volume_self(ray_origin, direction, min, max_l, box_intersection, lights, num_lights, d_density_grid, nx, ny, nz, center) * 2.0f ;
 
     return final_color;
 }
@@ -166,33 +202,7 @@ __device__ __host__ vec3 render_light(const vec3& ray_origin, const vec3& ray_di
     return color;
 }
 
-__device__ __host__ float intersect_box(const vec3& o, const vec3& d, const vec3& min, const vec3& max)
-{
-    // Calculate inverse direction to avoid division
 
-    vec3 inv_d = vec3(1.0f) / d;
-    
-    // Calculate t values for each slab
-    float t1 = (min.x - o.x) * inv_d.x;
-    float t2 = (max.x - o.x) * inv_d.x;
-    float t3 = (min.y - o.y) * inv_d.y;
-    float t4 = (max.y - o.y) * inv_d.y;
-    float t5 = (min.z - o.z) * inv_d.z;
-    float t6 = (max.z - o.z) * inv_d.z;
-    
-    // Find min and max t values for each axis
-    float tmin = fmaxf(fmaxf(fminf(t1, t2), fminf(t3, t4)), fminf(t5, t6));
-    float tmax = fminf(fminf(fmaxf(t1, t2), fmaxf(t3, t4)), fmaxf(t5, t6));
-    
-    // If tmax < 0, ray is intersecting but in the opposite direction
-    if (tmax < 0) return -1.0f;
-    
-    // If tmin > tmax, ray doesn't intersect the box
-    if (tmin > tmax) return -1.0f;
-    
-    // Return the first intersection point (tmin)
-    return tmin;
-}
 
 
 
@@ -233,7 +243,7 @@ __device__ __host__ vec3 render_volume(
         {
             vec3 normal{0,0,0};
             float t_box = intersect_cornell_box(o, d, lights, num_lights, normal);
-            return color + transmittance * cornellBox(o, d, t_box, lights, num_lights, normal, min, max);
+            return color + transmittance * cornellBox(o, d, t_box, lights, num_lights, normal, min, max, d_density_grid, nx, ny, nz, center);
         }
 
         // sample density
@@ -287,6 +297,9 @@ __device__ __host__ __forceinline__ vec3 trace_ray(
     int ny,
     int nz)
 {
+
+    bool use_kdtree = false;
+    
     vec3 normal{0, 0, 0};
     float t = intersect_cornell_box(ray_origin, ray_direction, lights, num_lights, normal);
     float t_box = intersect_box(ray_origin, ray_direction, min, max);
@@ -294,10 +307,17 @@ __device__ __host__ __forceinline__ vec3 trace_ray(
     if (t >= NO_INTERSECTION)
         return vec3{0, 0, 0}; // miss
 
-    if (t_box != -1.0f)  // safer float comparison instead of t_box != -1
-        return render_volume_self(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center);
+    vec3 illumination = vec3{0.0f};
+    if (t_box != -1.0f && !use_kdtree)  // safer float comparison instead of t_box != -1
+        illumination = render_volume_self(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center);
+    else if (use_kdtree && t_box != -1.0f)
+        illumination = render_volume_kdtree(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center);
 
-    return cornellBox(ray_origin, ray_direction, t, lights, num_lights, normal, min, max);
+    if(illumination != vec3{0.0f})
+        return illumination;
+
+
+    return cornellBox(ray_origin, ray_direction, t, lights, num_lights, normal, min, max, d_density_grid, nx, ny, nz, center);
 
 
 }

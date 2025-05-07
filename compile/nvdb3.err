@@ -1,1 +1,3 @@
 /usr/bin/ld: warning: libtbb.so.2, needed by /users/aagar133/.conda/envs/graphics/lib/libopenvdb.so, may conflict with libtbb.so.12
+ERROR: Bounding box is empty.
+ERROR: Bounding box is empty.

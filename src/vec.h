@@ -12,6 +12,16 @@ struct vec3{
     
     // Constructor for same value in all components
     __device__ __host__ vec3(float v) : x(v), y(v), z(v) {}
+
+    // Array access operator
+    __device__ __host__ float& operator[](int i) {
+        return (&x)[i];
+    }
+
+    // Const array access operator
+    __device__ __host__ const float& operator[](int i) const {
+        return (&x)[i];
+    }
 };
 
 inline __device__ __host__ vec3 operator+(const vec3& a, const vec3& b){
@@ -75,10 +85,48 @@ inline __device__ __host__ bool operator==(const vec3& a, const vec3& b){
     return a.x == b.x && a.y == b.y && a.z == b.z;
 }      
 
+// for != operator
+inline __device__ __host__ bool operator!=(const vec3& a, const vec3& b){
+    return !(a == b);
+}
+
 // Stream output operator for vec3
 inline std::ostream& operator<<(std::ostream& os, const vec3& v) {
     os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return os;
+}
+
+// Compound assignment operators
+inline __device__ __host__ vec3& operator+=(vec3& a, const vec3& b) {
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+    return a;
+}
+
+inline __device__ __host__ vec3& operator*=(vec3& a, float b) {
+    a.x *= b;
+    a.y *= b;
+    a.z *= b;
+    return a;
+}
+
+// Utility functions
+inline __device__ __host__ float clamp(float x, float min_val, float max_val) {
+    return fmaxf(min_val, fminf(x, max_val));
+}
+
+inline __device__ __host__ float mix(float a, float b, float t) {
+    return a + (b - a) * t;
+}
+
+inline __device__ __host__ vec3 mix(const vec3& a, const vec3& b, float t) {
+    return a + (b - a) * t;
+}
+
+// Unary minus operator
+inline __device__ __host__ vec3 operator-(const vec3& a) {
+    return vec3{-a.x, -a.y, -a.z};
 }
 
 #endif // VEC_H

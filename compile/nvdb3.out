@@ -1,19 +1,76 @@
 ## SLURM PROLOG ###############################################################
-##    Job ID : 11287323
+##    Job ID : 11322809
 ##  Job Name : plumes
-##  Nodelist : gpu2010
+##  Nodelist : gpu2007
 ##      CPUs : 
-##  Mem/Node : 16384 MB
+##  Mem/Node : 24576 MB
 ## Directory : /oscar/scratch/aagar133/cuda
-##   Job Started : Mon May  5 01:14:36 PM EDT 2025
+##   Job Started : Wed May  7 12:37:49 AM EDT 2025
 ###############################################################################
 Compilation complete!
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0001.vdb...
 Original bounding box (world coordinates):
-  Min: (-7.03194, 0.00998268, -4.72296)
-  Max: (4.66806, 6.38498, 5.10204)
-Number of lights: 734818
-Min: (-11.55, -50, -9.6)
-Max: (11.55, -37.25, 9.6)
-Center: (0, -43.625, 0)
-Grid dimensions: 155 86 129
-Grid size (bytes): 6878280
+  Min: (1.61061e+08, 1.61061e+08, 1.61061e+08)
+  Max: (-1.61061e+08, -1.61061e+08, -1.61061e+08)
+Number of lights: 0
+Min: (3.22123e+08, -50, 3.22123e+08)
+Max: (-3.22123e+08, -6.44245e+08, -3.22123e+08)
+Center: (0, -3.22123e+08, 0)
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0002.vdb...
+Original bounding box (world coordinates):
+  Min: (1.61061e+08, 1.61061e+08, 1.61061e+08)
+  Max: (-1.61061e+08, -1.61061e+08, -1.61061e+08)
+Number of lights: 0
+Min: (3.22123e+08, -50, 3.22123e+08)
+Max: (-3.22123e+08, -6.44245e+08, -3.22123e+08)
+Center: (0, -3.22123e+08, 0)
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0003.vdb...
+Original bounding box (world coordinates):
+  Min: (-1.55694, 0.00998268, -1.04796)
+  Max: (0.99306, 1.13498, 1.12704)
+Number of lights: 1581
+Min: (-2.55, -50, -2.175)
+Max: (2.55, -47.75, 2.175)
+Center: (0, -48.875, 0)
+Grid dimensions: 35 16 30
+Grid size (bytes): 67200
+
+Memory Usage Information:
+------------------------
+Total GPU Memory: 24212.4 MB
+Free GPU Memory: 24016.7 MB
+Used GPU Memory: 195.688 MB
+
+Allocated Memory Breakdown:
+Image Buffer: 4.69116 MB
+Lights Buffer: 0.0422173 MB
+Density Grid: 0.0640869 MB
+Progress Counter: 0.00390625 KB
+------------------------
+Rendering started...
+Progress: 100.0%
+Image saved to: self_output/untitled.filecache1_v1.0003.png
+Processing /users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.0004.vdb...
+Original bounding box (world coordinates):
+  Min: (-2.83194, 0.00998268, -1.79796)
+  Max: (1.81806, 2.10998, 1.95204)
+Number of lights: 8879
+Min: (-3.9, -50, -3.3)
+Max: (3.9, -46.4, 3.3)
+Center: (0, -48.2, 0)
+Grid dimensions: 53 25 45
+Grid size (bytes): 238500
+
+Memory Usage Information:
+------------------------
+Total GPU Memory: 24212.4 MB
+Free GPU Memory: 24016.7 MB
+Used GPU Memory: 195.688 MB
+
+Allocated Memory Breakdown:
+Image Buffer: 4.69116 MB
+Lights Buffer: 0.237095 MB
+Density Grid: 0.227451 MB
+Progress Counter: 0.00390625 KB
+------------------------
+Rendering started...
