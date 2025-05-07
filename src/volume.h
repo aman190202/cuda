@@ -4,7 +4,7 @@
 #include "light.h"
 #include "kdtree.h"
 
-#define NUM 50000
+#define NUM 100000
 
 __host__ __device__ float getDensityAtPositionDevice(float* grid, int nx, int ny, int nz, vec3 grid_min, vec3 grid_max, vec3 grid_center, vec3 pos_scene) 
 {
@@ -241,7 +241,7 @@ __device__ __host__ vec3 render_volume_kdtree(
                 t_light += step_size;
             }
 
-            self_illumination = self_illumination + node->color * light_contrib * node->intensity;
+            self_illumination = self_illumination + node->color * light_contrib * node->intensity * 5.0f;
         }
 
         // Scattering out
@@ -382,15 +382,15 @@ __device__ __host__ vec3 render_volume_self(
     const vec3& center)
 {
     const float ds = 0.03f;            // Smaller step size for better detail
-    const int Nsteps = 300;            // More steps for better quality
-    const float sigma_s = 4.0f;        // Higher scattering for stronger light interaction
-    const float sigma_a = 0.5f;        // Reduced absorption for more greyish appearance
+    const int Nsteps = 150; //300            // More steps for better quality
+    const float sigma_s = 2.0f;        // Reduced scattering for better light penetration
+    const float sigma_a = 0.15f;       // Further reduced absorption for brighter appearance
     const float sigma_t = sigma_s + sigma_a;  // extinction coefficient
     const float phase_g = 0.4f;        // Adjusted anisotropy for better light distribution
-    const int Nsample = 50000;           // Random lights count
-    const float light_radius = 3.0f;   // Significantly increased light influence radius
+    const int Nsample = NUM;           // Random lights count
+    const float light_radius = 2.0f;  // Increased light influence radius for better coverage
     const float inv_r2 = 1.0f / (light_radius * light_radius);
-    const float atten_k = 0.05f;       // Further reduced attenuation for much brighter illumination
+    const float atten_k = 0.02f;       // Further reduced attenuation for brighter illumination
     
     // Color temperature adjustment for realistic fire/explosion
     const vec3 hot_color = vec3{1.0f, 0.8f, 0.4f};    // Brighter orange-yellow for hot spots
@@ -402,7 +402,7 @@ __device__ __host__ vec3 render_volume_self(
     
     // Select random lights for sampling
     int light_idx[NUM];
-    generate_random_array(light_idx, NUM, num_lights, 0);
+    generate_random_array(light_idx, Nsample, num_lights, 18);
     
     // Edge darkening factor for billowing effect
     const float edge_contrast = 1.5f;
@@ -420,7 +420,7 @@ __device__ __host__ vec3 render_volume_self(
         float rho = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, p);
         
         // Skip low-density regions
-        if (rho <= 1e-4f) continue;
+        if (rho <= 1e-5f) continue;  // Lower density threshold for more transparency
         
         // Calculate distance from center for edge darkening
         vec3 rel_pos = p - center;
@@ -469,7 +469,7 @@ __device__ __host__ vec3 render_volume_self(
             }
             
             // Enhanced distance attenuation model with boost factor
-            float light_boost = 2.5f; // Boost light intensity
+            float light_boost = 7.5f; // Boost light intensity
             float dist_factor = 1.0f / (1.0f + dist * atten_k);
             float atten = Tr_light * dist_factor * light_boost;
             
@@ -499,7 +499,7 @@ __device__ __host__ vec3 render_volume_self(
         color += Tr * (inscatter + emissive) * ds;
         
         // Less aggressive transmittance reduction for more greyish appearance
-        Tr *= exp(-sigma_t * density_scale * ds * 0.85f);
+        Tr *= exp(-sigma_t * density_scale * ds * 0.6f);  // Reduced transmittance reduction
         
         // Early termination for efficiency
         if (Tr.x + Tr.y + Tr.z < 1e-3f) break;

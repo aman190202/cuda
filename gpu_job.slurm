@@ -43,7 +43,7 @@ module load  gcc/10.1.0-mojgbnp
 
 # Compile the renderer
 
-rm -rf ./render
+
 # latest compilation code
 nvcc -std=c++17 main.cu src/vdb_reader.cu -o render \
     -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib \
@@ -68,12 +68,12 @@ echo "Compilation complete!"
 
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 export LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so.6
-for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
-    if [ -f "$file" ]; then
-        echo "Processing $file..."
-        ./render "$file"
-    fi
-done
-# ./render v1/untitled.filecache1_v1.0028.vdb
+# for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
+#     if [ -f "$file" ]; then
+#         echo "Processing $file..."
+#         ./render "$file"
+#     fi
+# done
+nvprof ./render v1/untitled.filecache1_v1.0067.vdb
 
-echo "All files processed!" 
+# echo "All files processed!" 

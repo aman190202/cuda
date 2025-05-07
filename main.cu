@@ -19,7 +19,8 @@
 constexpr float PI = 3.14159265358979323846f;
 
 // Simple Reinhard tone mapping
-__device__ __host__ vec3 toneMap(const vec3& color) {
+__device__ __host__ vec3 toneMap(const vec3& color)
+{
     // Reinhard tone mapping
     vec3 mapped = color / (color + vec3{1.0f, 1.0f, 1.0f});
     // Gamma correction
@@ -103,8 +104,8 @@ int main(int argc, char* argv[])
     }
 
     const char* vdb_file = argv[1];
-    int width  = 854;
-    int height = 480;
+    int width  = 500;
+    int height = 500;
     int total_pixels = width * height;
 
     // Light and density grid setup 
@@ -199,7 +200,7 @@ int main(int argc, char* argv[])
     std::string filename = (last_slash != std::string::npos) ? input_file.substr(last_slash + 1) : input_file;
     size_t last_dot = filename.find_last_of(".");
     std::string base_name = (last_dot != std::string::npos) ? filename.substr(0, last_dot) : filename;
-    std::string output_file = "self_output/" + base_name + ".png";
+    std::string output_file = "thousand_down/" + base_name + ".png";
 
     // Copy back and save
     cudaMemcpy(Image.data(), d_image, total_pixels * sizeof(color), cudaMemcpyDeviceToHost);
