@@ -1,33 +1,50 @@
 ## SLURM PROLOG ###############################################################
-##    Job ID : 11335712
+##    Job ID : 11340811
 ##  Job Name : plumes
-##  Nodelist : gpu2010
+##  Nodelist : gpu2004
 ##      CPUs : 
 ##  Mem/Node : 24576 MB
 ## Directory : /oscar/scratch/aagar133/cuda
-##   Job Started : Wed May  7 03:57:22 PM EDT 2025
+##   Job Started : Wed May  7 05:54:33 PM EDT 2025
 ###############################################################################
 Compilation complete!
-Original bounding box (world coordinates):
-  Min: (-18.8819, 0.00998268, -13.498)
-  Max: (12.9931, 38.26, 11.852)
-Number of lights: 7240222
-Min: (-31.575, -50, -25.125)
-Max: (31.575, 26.35, 25.125)
-Center: (0, -11.825, 0)
-Grid dimensions: 422 510 336
-Grid size (bytes): 289255680
+NVIDIA (R) CUDA Debugger
+11.8 release
+Portions Copyright (C) 2007-2022 NVIDIA Corporation
+GNU gdb (GDB) 10.2
+Copyright (C) 2021 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-pc-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
 
-Memory Usage Information:
-------------------------
-Total GPU Memory: 24212.4 MB
-Free GPU Memory: 23561.2 MB
-Used GPU Memory: 651.125 MB
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./render...
+(cuda-gdb) quit
+NVIDIA (R) CUDA Debugger
+11.8 release
+Portions Copyright (C) 2007-2022 NVIDIA Corporation
+GNU gdb (GDB) 10.2
+Copyright (C) 2021 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Type "show copying" and "show warranty" for details.
+This GDB was configured as "x86_64-pc-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<https://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+    <http://www.gnu.org/software/gdb/documentation/>.
 
-Allocated Memory Breakdown:
-Image Buffer: 2.86102 MB
-Lights Buffer: 193.335 MB
-Density Grid: 275.856 MB
-Progress Counter: 0.00390625 KB
-------------------------
-Rendering started...
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./render...
+(cuda-gdb) quit

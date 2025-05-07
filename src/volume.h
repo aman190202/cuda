@@ -164,98 +164,98 @@ __device__ __host__ vec3 render_volume_kdtree(
     const int maxResults = 1000;  // Maximum number of lights to consider
 
     vec3 illumination = vec3{0.0f};
-    float transmittance = 1.0f;
+    // float transmittance = 1.0f;
 
-    vec3 sample_position = o + d * t_near;
+    // vec3 sample_position = o + d * t_near;
 
-    // Build KD-tree for efficient light queries
-    KDNode* root = build_kdtree(lights, num_lights, 0);
+    // // Build KD-tree for efficient light queries
+    // KDNode* root = build_kdtree(lights, num_lights, 0);
 
-    // Allocate device memory for results
-    KDNode** d_results;
-    int* d_resultCount;
-    cudaMalloc(&d_results, maxResults * sizeof(KDNode*));
-    cudaMalloc(&d_resultCount, sizeof(int));
+    // // Allocate device memory for results
+    // KDNode** d_results;
+    // int* d_resultCount;
+    // cudaMalloc(&d_results, maxResults * sizeof(KDNode*));
+    // cudaMalloc(&d_resultCount, sizeof(int));
 
-    for (int i = 0; i < step_count; i++) 
-    {
-        sample_position = sample_position + (d * step_size);
+    // for (int i = 0; i < step_count; i++) 
+    // {
+    //     sample_position = sample_position + (d * step_size);
 
-        // Sample density
-        float density = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, sample_position);
-        if (density < 0.2f)
-            continue;
+    //     // Sample density
+    //     float density = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, sample_position);
+    //     if (density < 0.2f)
+    //         continue;
 
-        // Compute transmittance
-        transmittance *= expf(-density * extinction_coef * step_size);
+    //     // Compute transmittance
+    //     transmittance *= expf(-density * extinction_coef * step_size);
 
-        // --- Self-illumination calculation using KD-tree ---
-        vec3 self_illumination = vec3{0.0f};
+    //     // --- Self-illumination calculation using KD-tree ---
+    //     vec3 self_illumination = vec3{0.0f};
 
-        // Find nearby lights using KD-tree
-        radiusSearch(root, sample_position, 10.0f, d_results, d_resultCount, maxResults);
+    //     // Find nearby lights using KD-tree
+    //     radiusSearch(root, sample_position, 10.0f, d_results, d_resultCount, maxResults);
 
-        // Get result count
-        int resultCount;
-        cudaMemcpy(&resultCount, d_resultCount, sizeof(int), cudaMemcpyDeviceToHost);
+    //     // Get result count
+    //     int resultCount;
+    //     cudaMemcpy(&resultCount, d_resultCount, sizeof(int), cudaMemcpyDeviceToHost);
 
-        for(int l = 0; l < resultCount; l++) 
-        {
-            KDNode* node;
-            cudaMemcpy(&node, &d_results[l], sizeof(KDNode*), cudaMemcpyDeviceToHost);
+    //     for(int l = 0; l < resultCount; l++) 
+    //     {
+    //         KDNode* node;
+    //         cudaMemcpy(&node, &d_results[l], sizeof(KDNode*), cudaMemcpyDeviceToHost);
             
-            vec3 light_dir = normalize(node->position - sample_position);
-            float light_dist = length(node->position - sample_position);
+    //         vec3 light_dir = normalize(node->position - sample_position);
+    //         float light_dist = length(node->position - sample_position);
 
-            float light_contrib = 1.0f;
-            float t_light = 0.0f;
+    //         float light_contrib = 1.0f;
+    //         float t_light = 0.0f;
 
-            // Raymarch towards light to calculate shadowing
-            while (t_light < light_dist) 
-            {
-                vec3 pos = sample_position + light_dir * t_light;
+    //         // Raymarch towards light to calculate shadowing
+    //         while (t_light < light_dist) 
+    //         {
+    //             vec3 pos = sample_position + light_dir * t_light;
 
-                // Check bounds
-                if (pos.x < min.x || pos.x > max.x ||
-                    pos.y < min.y || pos.y > max.y ||
-                    pos.z < min.z || pos.z > max.z)
-                    break;
+    //             // Check bounds
+    //             if (pos.x < min.x || pos.x > max.x ||
+    //                 pos.y < min.y || pos.y > max.y ||
+    //                 pos.z < min.z || pos.z > max.z)
+    //                 break;
 
-                float dens_inside = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, pos);
-                if (dens_inside < 0.3f)
-                {
-                    t_light += step_size;
-                    continue;
-                }
+    //             float dens_inside = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, pos);
+    //             if (dens_inside < 0.3f)
+    //             {
+    //                 t_light += step_size;
+    //                 continue;
+    //             }
 
-                // Attenuate light contribution by extinction
-                light_contrib *= expf(-dens_inside * extinction_coef * step_size);
+    //             // Attenuate light contribution by extinction
+    //             light_contrib *= expf(-dens_inside * extinction_coef * step_size);
 
-                // Early termination
-                if (light_contrib < 0.01f) 
-                {
-                    light_contrib = 0.0f;
-                    break;
-                }
+    //             // Early termination
+    //             if (light_contrib < 0.01f) 
+    //             {
+    //                 light_contrib = 0.0f;
+    //                 break;
+    //             }
 
-                t_light += step_size;
-            }
+    //             t_light += step_size;
+    //         }
 
-            self_illumination = self_illumination + node->color * light_contrib * node->intensity * 5.0f;
-        }
+    //         self_illumination = self_illumination + node->color * light_contrib * node->intensity * 5.0f;
+    //     }
 
-        // Scattering out
-        float out_scattering = scattering_coef * density;
+    //     // Scattering out
+    //     float out_scattering = scattering_coef * density;
 
-        vec3 current_light = self_illumination * out_scattering;
+    //     vec3 current_light = self_illumination * out_scattering;
 
-        illumination = illumination + transmittance * current_light * step_size;
-    }
+    //     illumination = illumination + transmittance * current_light * step_size;
+    // }
 
-    // Clean up
-    free_kdtree(root);
-    cudaFree(d_results);
-    cudaFree(d_resultCount);
+    // // Clean up
+    // free_kdtree(root);
+    // cudaFree(d_results);
+    // cudaFree(d_resultCount);
     
     return illumination;
 }

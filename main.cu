@@ -8,11 +8,15 @@
 #include <thread>
 #include <chrono>
 #include <iomanip>
+
 #include "src/vec.h"
 #include "src/light.h"
 #include "src/renderer.h"
-// #include "src/vdb_reader.cu"
+#include "src/kdtree.h"
+#include "src/LGH.h"
 #include "src/vdb_reader.h"
+
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "src/stb_image_write.h"
 
@@ -32,7 +36,11 @@ __device__ __host__ vec3 toneMap(const vec3& color)
 }
 
 // CUDA kernel to generate the image with a simple pinhole camera
-__global__ void generateImage(color* image, int width, int height, light* lights, int num_lights, vec3 min, vec3 max, vec3 center, float* d_density_grid, int nx, int ny, int nz, int* d_progress) 
+__global__ void generateImage(color* image, 
+                                int width, int height, 
+                                light* lights,  int num_lights, 
+                                vec3 min, vec3 max, vec3 center, float* d_density_grid, int nx, int ny, int nz, 
+                                int* d_progress) 
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= width * height) return;
@@ -61,7 +69,11 @@ __global__ void generateImage(color* image, int width, int height, light* lights
         vec3 ray_origin = vec3{0.0f, 0.0f, 100.0f};
         vec3 ray_direction = normalize(vec3{u, v, -1.0f});
         
-        vec3 sample_color = trace_ray(ray_origin, ray_direction, lights, num_lights, min, max, center, d_density_grid, nx, ny, nz);
+        vec3 sample_color = trace_ray(ray_origin, 
+                                    ray_direction, 
+                                    lights, num_lights,
+                                     min, max, center, d_density_grid, nx, ny, nz);
+
         accumulated_color = accumulated_color + sample_color;
     }
 
@@ -79,7 +91,9 @@ __global__ void generateImage(color* image, int width, int height, light* lights
     atomicAdd(d_progress, 1);
 }
 
-void saveImage(const std::vector<color>& image, int width, int height, const char* filename)
+void saveImage(const std::vector<color>& image, 
+                int width, int height, 
+                const char* filename)
 {
     // Convert float colors to unsigned char (0-255)
     std::vector<unsigned char> data(width * height * 3);
@@ -108,9 +122,20 @@ int main(int argc, char* argv[])
     int height = 500;
     int total_pixels = width * height;
 
-    // Light and density grid setup 
 
-    std::vector<light> lights = getLightsFromVDB(vdb_file);
+
+    // Light and density grid setup 
+    float voxel_size;
+    vec3 world_min, world_max;
+    std::vector<light> lights = getLightsFromVDB(vdb_file, &voxel_size, &world_min, &world_max);
+    std::vector<KDNode*> lighting_grids = LGH(lights, 1, voxel_size, world_min, world_max);
+    std::cout << "Lighting grids: " << lighting_grids.size() << std::endl;
+    
+
+    std::cout << "Distance between first two lights: " << length(lights[0].position - lights[1].position) << std::endl;
+    std::cout << "Distance between second and third lights: " << length(lights[1].position - lights[2].position) << std::endl;
+    
+
     int num_lights = static_cast<int>(lights.size());
     std::cout << "Number of lights: " << num_lights << std::endl;
 

@@ -22,6 +22,13 @@ struct vec3{
     __device__ __host__ const float& operator[](int i) const {
         return (&x)[i];
     }
+
+    // Unary minus operator
+    __device__ __host__ vec3 operator-() const { return vec3(-x, -y, -z); }
+    
+    vec3 abs() const { return vec3(std::abs(x), std::abs(y), std::abs(z)); }
+    
+    float length() const { return sqrt(x*x + y*y + z*z); }
 };
 
 inline __device__ __host__ vec3 operator+(const vec3& a, const vec3& b){
@@ -122,11 +129,6 @@ inline __device__ __host__ float mix(float a, float b, float t) {
 
 inline __device__ __host__ vec3 mix(const vec3& a, const vec3& b, float t) {
     return a + (b - a) * t;
-}
-
-// Unary minus operator
-inline __device__ __host__ vec3 operator-(const vec3& a) {
-    return vec3{-a.x, -a.y, -a.z};
 }
 
 #endif // VEC_H

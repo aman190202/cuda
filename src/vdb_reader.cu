@@ -53,7 +53,7 @@ __host__ __device__ vec3 temperatureToColor(float temp) {
 }
 
 
-std::vector<light> getLightsFromVDB(const char* filename) {
+std::vector<light> getLightsFromVDB(const char* filename, float* voxel_size, vec3* world_min, vec3* world_max) {
     std::vector<light> lights;
     openvdb::initialize();
 
@@ -74,9 +74,16 @@ std::vector<light> getLightsFromVDB(const char* filename) {
             openvdb::Vec3d worldMin = floatGrid->indexToWorld(bbox.min());
             openvdb::Vec3d worldMax = floatGrid->indexToWorld(bbox.max());
             
-            std::cout << "Original bounding box (world coordinates):" << std::endl;
-            std::cout << "  Min: (" << worldMin.x() << ", " << worldMin.y() << ", " << worldMin.z() << ")" << std::endl;
-            std::cout << "  Max: (" << worldMax.x() << ", " << worldMax.y() << ", " << worldMax.z() << ")" << std::endl;
+            // Get and print voxel size
+            openvdb::Vec3d voxelSize = floatGrid->voxelSize();
+            std::cout << "Voxel size: (" << voxelSize.x() << ", " << voxelSize.y() << ", " << voxelSize.z() << ")" << std::endl;
+            *voxel_size = voxelSize.x() * 2;
+            *world_min = vec3(worldMin.x(), worldMin.y(), worldMin.z());
+            *world_max = vec3(worldMax.x(), worldMax.y(), worldMax.z());
+            
+            // std::cout << "Original bounding box (world coordinates):" << std::endl;
+            // std::cout << "  Min: (" << worldMin.x() << ", " << worldMin.y() << ", " << worldMin.z() << ")" << std::endl;
+            // std::cout << "  Max: (" << worldMax.x() << ", " << worldMax.y() << ", " << worldMax.z() << ")" << std::endl;
             
             // Calculate the height of the bounding box
             double height = worldMax.y() - worldMin.y();
@@ -89,6 +96,24 @@ std::vector<light> getLightsFromVDB(const char* filename) {
             
             // Calculate the new height after scaling
             double scaledHeight = height * scaleFactor;
+            
+            // Calculate scaled min and max positions for lights
+            openvdb::Vec3d scaledMin(
+                targetBase.x() + (worldMin.x() - (worldMin.x() + worldMax.x()) * 0.5) * scaleFactor,
+                targetBase.y(),
+                targetBase.z() + (worldMin.z() - (worldMin.z() + worldMax.z()) * 0.5) * scaleFactor
+            );
+            
+            openvdb::Vec3d scaledMax(
+                targetBase.x() + (worldMax.x() - (worldMin.x() + worldMax.x()) * 0.5) * scaleFactor,
+                targetBase.y() + scaledHeight,
+                targetBase.z() + (worldMax.z() - (worldMin.z() + worldMax.z()) * 0.5) * scaleFactor
+            );
+
+            std::cout << "Modified bounding box for lights:" << std::endl;
+            std::cout << "  Min: (" << scaledMin.x() << ", " << scaledMin.y() << ", " << scaledMin.z() << ")" << std::endl;
+            std::cout << "  Max: (" << scaledMax.x() << ", " << scaledMax.y() << ", " << scaledMax.z() << ")" << std::endl;
+            std::cout << "  Height: " << scaledHeight << std::endl;
             
             // Iterate through all active voxels
             for (openvdb::FloatGrid::ValueOnIter iter = floatGrid->beginValueOn(); iter; ++iter) {
