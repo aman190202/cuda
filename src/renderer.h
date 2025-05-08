@@ -300,7 +300,7 @@ __device__  vec3 trace_ray(
     int l_max, float h)
 {
 
-    bool use_kdtree = false;
+    bool use_kdtree = true;
     
     vec3 normal{0, 0, 0};
     float t = intersect_cornell_box(ray_origin, ray_direction, lights, num_lights, normal);
@@ -313,13 +313,11 @@ __device__  vec3 trace_ray(
     if (t_box != -1.0f && !use_kdtree)  // safer float comparison instead of t_box != -1
         illumination = render_volume_self(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center);
     else if (use_kdtree && t_box != -1.0f)
-        illumination = render_volume_kdtree(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center, d_lighting_grids, l_max, h);
+        illumination = render_volume_kdtree(ray_origin, ray_direction, min, max, t_box, d_density_grid, nx, ny, nz, center, d_lighting_grids, l_max, h);
 
     if(illumination != vec3{0.0f})
         return illumination;
 
-
     return cornellBox(ray_origin, ray_direction, t, lights, num_lights, normal, min, max, d_density_grid, nx, ny, nz, center);
-
 
 }

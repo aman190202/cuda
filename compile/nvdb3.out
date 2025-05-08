@@ -1,11 +1,11 @@
 ## SLURM PROLOG ###############################################################
-##    Job ID : 11349014
+##    Job ID : 11349202
 ##  Job Name : plumes
-##  Nodelist : gpu2503
+##  Nodelist : gpu1403
 ##      CPUs : 
 ##  Mem/Node : 24576 MB
 ## Directory : /oscar/scratch/aagar133/cuda
-##   Job Started : Thu May  8 12:52:52 AM EDT 2025
+##   Job Started : Thu May  8 01:09:26 AM EDT 2025
 ###############################################################################
 Compilation complete!
 Voxel size: (0.075, 0.075, 0.075)
@@ -17,3 +17,19 @@ Number of lights: 7240222
 Min: (-31.575, -50, -25.125)
 Max: (31.575, 26.35, 25.125)
 Center: (0, -11.825, 0)
+Grid dimensions: 422 510 336
+Grid size (bytes): 289255680
+
+Memory Usage Information:
+------------------------
+Total GPU Memory: 24212.4 MB
+Free GPU Memory: 23556.1 MB
+Used GPU Memory: 656.312 MB
+
+Allocated Memory Breakdown:
+Image Buffer: 11.4441 MB
+Lights Buffer: 193.335 MB
+Density Grid: 275.856 MB
+Progress Counter: 0.00390625 KB
+------------------------
+Rendering started...

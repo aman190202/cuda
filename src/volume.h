@@ -242,154 +242,120 @@ __device__ __host__ vec3 render_volume_self(
  */
 
 
-__device__  vec3 render_volume_kdtree(const vec3& ray_origin, const vec3& ray_direction, 
-                                                const vec3& min, const vec3& max, 
-                                                float t_box, light* lights, int num_lights, 
-                                                float* d_density_grid, int nx, int ny, int nz, 
-                                                const vec3& center, KDNode** d_lighting_grids, int l_max,
-                                                float h)
-                                                
+__device__ vec3 render_volume_kdtree(const vec3& ray_origin, const vec3& ray_direction, 
+                                     const vec3& min, const vec3& max, 
+                                     float t_box, float* d_density_grid, 
+                                     int nx, int ny, int nz, const vec3& center, 
+                                     KDNode** d_lighting_grids, int l_max, float h)
 {
-    const float ds = 0.03f;            // Smaller step size for better detail
-    const int Nsteps = 300;            // More steps for better quality
-    const float sigma_s = 2.0f;        // Reduced scattering for better light penetration
-    const float sigma_a = 0.15f;       // Further reduced absorption for brighter appearance
-    const float sigma_t = sigma_s + sigma_a;  // extinction coefficient
-    const float phase_g = 0.4f;        // Adjusted anisotropy for better light distribution
-    const int Nsample = NUM;           // Random lights count
-    const float light_radius = 2.0f;  // Increased light influence radius for better coverage
-    const float inv_r2 = 1.0f / (light_radius * light_radius);
-    const float atten_k = 0.02f;       // Further reduced attenuation for brighter illumination
-    
-    // Color temperature adjustment for realistic fire/explosion
-    const vec3 hot_color = vec3{1.0f, 0.8f, 0.4f};    // Brighter orange-yellow for hot spots
-    const vec3 cool_color = vec3{0.2f, 0.2f, 0.22f};  // More greyish for smoke areas
-    
-    vec3 color = vec3{0.0f};           // accumulated radiance
-    vec3 Tr = vec3{1.0f};              // transmittance
-    vec3 p = ray_origin + ray_direction * t_box;           // current sample
-    
-    // Select random lights for sampling
-    int light_idx[NUM];
-    generate_random_array(light_idx, Nsample, num_lights, 18);
-    
-    // Edge darkening factor for billowing effect
+    const float ds = 0.03f;
+    const int Nsteps = 300;
+    const float sigma_s = 2.0f;
+    const float sigma_a = 0.15f;
+    const float sigma_t = sigma_s + sigma_a;
+    const float phase_g = 0.4f;
+    const float atten_k = 0.02f;
+
+    const vec3 hot_color = vec3{1.0f, 0.8f, 0.4f};
+    const vec3 cool_color = vec3{0.2f, 0.2f, 0.22f};
+
+    vec3 color = vec3{0.0f};
+    vec3 Tr = vec3{1.0f};
+    vec3 p = ray_origin + ray_direction * t_box;
+
     const float edge_contrast = 1.5f;
-    
-    for (int i = 0; i < Nsteps; ++i) 
+
+    for (int step = 0; step < Nsteps; ++step) 
     {
         p += ray_direction * ds;
 
-        KDNode* results[128];
-        int resultCount = 0;
+        if (p.x < min.x || p.x > max.x ||
+            p.y < min.y || p.y > max.y ||
+            p.z < min.z || p.z > max.z)
+            break;
 
-        for (int j = 0; j < l_max; j++) 
-        {
-            KDNode* node = d_lighting_grids[j];
-            float radius = h;
-
-            resultCount = 0;
-            radiusSearchRecursive(node, p, radius * radius, 0, results, &resultCount, 128);
-            
-            for (int k = 0; k < resultCount; k++) 
-            {
-                KDNode* result = results[k];
-                float dist2 = distanceSquaredCUDA(p, result->position);
-                float attenuation = exp(-sigma_t * dist2);
-            }
-        }
-        
-        
-        // Get density at current position
         float rho = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, p);
-        
-        // Skip low-density regions
-        if (rho <= 1e-5f) continue;  // Lower density threshold for more transparency
-        
-        // Calculate distance from center for edge darkening
+        if (rho <= 1e-5f) continue;
+
         vec3 rel_pos = p - center;
         float dist_from_center = length(rel_pos);
         float normalized_dist = clamp(dist_from_center / length(max - min) * 2.0f, 0.0f, 1.0f);
-        
-        // Apply less edge darkening for more greyish billowing effect
+
         float density_scale = rho * mix(1.2f, edge_contrast, normalized_dist * 0.7f);
-        
-        // Density gradient for more interesting variation
+
         vec3 density_grad = getDensityGradient(d_density_grid, nx, ny, nz, min, max, center, p, ds);
         float grad_mag = length(density_grad);
-        
-        // Enhance edges where gradient is high (billowing effect) with increased intensity
         float edge_factor = clamp(grad_mag * 8.0f, 0.0f, 1.0f);
-        
-        // Light accumulation
+
+        // -------------------------
+        // KDTree lights processing
+        // -------------------------
         vec3 Lsum = vec3{0.0f};
-        #pragma unroll
-        for (int si = 0; si < Nsample; ++si) {
-            int li = light_idx[si];
-            vec3 toL = lights[li].position - p;
-            float dist2 = dot(toL, toL);
-            
-            if (dist2 > light_radius * light_radius) continue;
-            
-            float dist = sqrt(dist2);
-            vec3 wi = toL / dist; // Normalize direction to light
-            
-            // Calculate light transmittance with reduced shadowing for brighter effect
-            float Tr_light = 1.0f;
-            vec3 ps = p;
-            float traveled = 0.0f;
-            
-            // March towards light to calculate occlusion with larger steps for less shadowing
-            float shadow_ds = ds * 1.5f;
-            while (traveled < dist) {
-                ps += wi * shadow_ds;
-                float rs = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, ps);
-                
-                // Apply lighter non-linear density mapping for less dramatic shadows
-                rs = pow(rs, 1.2f) * 0.8f;
-                
-                Tr_light *= exp(-sigma_t * rs * shadow_ds);
-                if (Tr_light < 1e-4f) break;
-                traveled += shadow_ds;
+
+        for (int j = 0; j < l_max; ++j) 
+        {
+            KDNode* root = d_lighting_grids[j];
+            float radius = h;
+
+            KDNode* results[64];
+            int resultCount = 0;
+
+            radiusSearchRecursive(root, p, radius * radius, 0, results, &resultCount, 64);
+
+            for (int k = 0; k < resultCount; ++k)
+            {
+                KDNode* lightNode = results[k];
+                vec3 toL = lightNode->position - p;
+                float dist2 = dot(toL, toL);
+
+                float light_radius = radius;
+                if (dist2 > light_radius * light_radius) continue;
+
+                float dist = sqrt(dist2);
+                vec3 wi = toL / dist;
+
+                float Tr_light = 1.0f;
+                vec3 ps = p;
+                float traveled = 0.0f;
+                float shadow_ds = ds * 1.5f;
+
+                while (traveled < dist) 
+                {
+                    ps += wi * shadow_ds;
+                    float rs = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, ps);
+                    rs = pow(rs, 1.2f) * 0.8f;
+                    Tr_light *= exp(-sigma_t * rs * shadow_ds);
+                    if (Tr_light < 1e-4f) break;
+                    traveled += shadow_ds;
+                }
+
+                float light_boost = 10.0f;
+                float dist_factor = 1.0f / (1.0f + dist * atten_k);
+                float atten = Tr_light * dist_factor * light_boost;
+
+                float cosTh = dot(wi, -ray_direction);
+                float denom = 1.0f + phase_g * phase_g - 2.0f * phase_g * cosTh;
+                float phase = (1.0f - phase_g * phase_g) / (4.0f * M_PI * pow(denom, 1.5f));
+
+                Lsum += lightNode->color * lightNode->intensity * atten * phase;
             }
-            
-            // Enhanced distance attenuation model with boost factor
-            float light_boost = 10.0f; // Boost light intensity
-            float dist_factor = 1.0f / (1.0f + dist * atten_k);
-            float atten = Tr_light * dist_factor * light_boost;
-            
-            // Improved phase function (Henyey-Greenstein)
-            float cosTh = dot(wi, -ray_direction); // Note: negated d for backward scattering
-            float denom = 1.0f + phase_g*phase_g - 2.0f*phase_g*cosTh;
-            float phase = (1.0f - phase_g*phase_g) / (4.0f * M_PI * pow(denom, 1.5f));
-            
-            // Add contribution from this light
-            Lsum += lights[li].col * lights[li].intensity * atten * phase;
         }
-        
-        // Temperature-based color mixing (hot core, cool outer smoke)
+
+        // Temperature-based color mixing
         vec3 local_color = mix(hot_color, cool_color, normalized_dist);
-        
-        // Calculate in-scattering with temperature coloring
+
         vec3 inscatter = sigma_s * density_scale * Lsum * local_color;
-        
-        // Apply stronger edge enhancement for more dramatic billowing effect
         inscatter = mix(inscatter, inscatter * 2.2f, edge_factor);
-        
-        // Add emissive component for brighter core areas
+
         float emissive_factor = clamp(1.0f - normalized_dist * 2.0f, 0.0f, 1.0f);
         vec3 emissive = hot_color * emissive_factor * rho * 0.8f;
-        
-        // Accumulate color with emissive component and update transmittance
+
         color += Tr * (inscatter + emissive) * ds;
-        
-        // Less aggressive transmittance reduction for more greyish appearance
-        Tr *= exp(-sigma_t * density_scale * ds * 0.6f);  // Reduced transmittance reduction
-        
-        // Early termination for efficiency
+        Tr *= exp(-sigma_t * density_scale * ds * 0.6f);
+
         if (Tr.x + Tr.y + Tr.z < 1e-3f) break;
     }
-    
+
     return color;
 }
 
