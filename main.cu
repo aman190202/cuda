@@ -120,8 +120,8 @@ int main(int argc, char* argv[])
     }
 
     const char* vdb_file = argv[1];
-    int width  = 1000;
-    int height = 1000;
+    int width  = 854;
+    int height = 480;
     int total_pixels = width * height;
 
 
@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
     std::string filename = (last_slash != std::string::npos) ? input_file.substr(last_slash + 1) : input_file;
     size_t last_dot = filename.find_last_of(".");
     std::string base_name = (last_dot != std::string::npos) ? filename.substr(0, last_dot) : filename;
-    std::string output_file = "classic/" + base_name + ".png";
+    std::string output_file = "classic_old/" + base_name + ".png";
 
     // Copy back and save
     cudaMemcpy(Image.data(), d_image, total_pixels * sizeof(color), cudaMemcpyDeviceToHost);

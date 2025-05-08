@@ -300,7 +300,7 @@ __device__  vec3 trace_ray(
     int l_max, float h)
 {
 
-    bool use_kdtree = true;
+    bool use_kdtree = false;
     
     vec3 normal{0, 0, 0};
     float t = intersect_cornell_box(ray_origin, ray_direction, lights, num_lights, normal);
