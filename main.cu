@@ -40,7 +40,8 @@ __global__ void generateImage(color* image,
                                 int width, int height, 
                                 light* lights,  int num_lights, 
                                 vec3 min, vec3 max, vec3 center, float* d_density_grid, int nx, int ny, int nz, 
-                                int* d_progress) 
+                                int* d_progress,
+                                KDNode** d_lighting_grids, int l_max, float h) 
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= width * height) return;
@@ -72,7 +73,8 @@ __global__ void generateImage(color* image,
         vec3 sample_color = trace_ray(ray_origin, 
                                     ray_direction, 
                                     lights, num_lights,
-                                     min, max, center, d_density_grid, nx, ny, nz);
+                                     min, max, center, d_density_grid, nx, ny, nz,
+                                     d_lighting_grids, l_max, h);
 
         accumulated_color = accumulated_color + sample_color;
     }
@@ -118,8 +120,8 @@ int main(int argc, char* argv[])
     }
 
     const char* vdb_file = argv[1];
-    int width  = 500;
-    int height = 500;
+    int width  = 1000;
+    int height = 1000;
     int total_pixels = width * height;
 
 
@@ -129,12 +131,7 @@ int main(int argc, char* argv[])
     vec3 world_min, world_max;
     std::vector<light> lights = getLightsFromVDB(vdb_file, &voxel_size, &world_min, &world_max);
     std::vector<KDNode*> lighting_grids = LGH(lights, 1, voxel_size, world_min, world_max);
-    std::cout << "Lighting grids: " << lighting_grids.size() << std::endl;
-    
-
-    std::cout << "Distance between first two lights: " << length(lights[0].position - lights[1].position) << std::endl;
-    std::cout << "Distance between second and third lights: " << length(lights[1].position - lights[2].position) << std::endl;
-    
+    int l_max = lighting_grids.size();    
 
     int num_lights = static_cast<int>(lights.size());
     std::cout << "Number of lights: " << num_lights << std::endl;
@@ -163,6 +160,7 @@ int main(int argc, char* argv[])
     color* d_image;
     light* d_lights;
     int* d_progress;
+    KDNode** d_lighting_grids;
     cudaMalloc(&d_image, total_pixels * sizeof(color));
     cudaMalloc(&d_lights, num_lights * sizeof(light));
     cudaMalloc(&d_density_grid, gridSize);
@@ -170,6 +168,8 @@ int main(int argc, char* argv[])
     cudaMemset(d_progress, 0, sizeof(int));
     cudaMemcpy(d_lights, lights.data(), num_lights * sizeof(light), cudaMemcpyHostToDevice);
     cudaMemcpy(d_density_grid, denseGrid.data(), gridSize, cudaMemcpyHostToDevice);
+    cudaMalloc(&d_lighting_grids, l_max * sizeof(KDNode*));
+    cudaMemcpy(d_lighting_grids, lighting_grids.data(), l_max * sizeof(KDNode*), cudaMemcpyHostToDevice);
 
     // Print memory usage information
     size_t total_memory = 0;
@@ -196,7 +196,13 @@ int main(int argc, char* argv[])
 
     // Start progress tracking
     std::cout << "Rendering started..." << std::endl;
-    generateImage<<<numBlocks, blockSize>>>(d_image, width, height, d_lights, num_lights, min, max, center, d_density_grid, nx, ny, nz, d_progress);
+    generateImage<<<numBlocks, blockSize>>>(d_image, 
+                                            width, height,
+                                             d_lights, num_lights, 
+                                             min, max, center, 
+                                             d_density_grid, nx, ny, nz, 
+                                             d_progress,
+                                             d_lighting_grids, l_max, voxel_size);
     
     // Monitor progress
     int last_progress = 0;
@@ -225,7 +231,7 @@ int main(int argc, char* argv[])
     std::string filename = (last_slash != std::string::npos) ? input_file.substr(last_slash + 1) : input_file;
     size_t last_dot = filename.find_last_of(".");
     std::string base_name = (last_dot != std::string::npos) ? filename.substr(0, last_dot) : filename;
-    std::string output_file = "thousand_down/" + base_name + ".png";
+    std::string output_file = "classic/" + base_name + ".png";
 
     // Copy back and save
     cudaMemcpy(Image.data(), d_image, total_pixels * sizeof(color), cudaMemcpyDeviceToHost);

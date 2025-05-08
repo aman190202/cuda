@@ -10,6 +10,7 @@ KDNode* build_kdtree(const std::vector<light>& lights);
 std::vector<KDNode*> LGH(std::vector<light> lights, int depth, float h, vec3 BBoxMin, vec3 BBoxMax);
 float calcNewI(int l, vec3 target_light_pos, const std::vector<KDNode*>& j_lights, float h);
 vec3 calcNewPos(int l, vec3 target_light_pos, const std::vector<KDNode*>& j_lights, float h);
+vec3 calcNewColor(int l, vec3 target_light_pos, const std::vector<KDNode*>& j_lights, float h);
 
 KDNode* build(std::vector<light> points, int depth) {
     if (points.empty()) return nullptr;
@@ -74,7 +75,7 @@ KDNode* deriveNewS(KDNode* lighting_grid_j, int l, float h, vec3 BBoxMin, vec3 B
         if (!j_lights.empty()) {
             float I = calcNewI(l, target_light_pos, j_lights, h);
             vec3 p = calcNewPos(l, target_light_pos, j_lights, h);
-            vec3 col = j_lights[0]->color;
+            vec3 col = calcNewColor(l, target_light_pos, j_lights, h);
             if (I > 0.f) {
                 lights.emplace_back(p, col, I);
             }
@@ -113,6 +114,21 @@ vec3 calcNewPos(int l, vec3 target_light_pos, const std::vector<KDNode*>& j_ligh
     }
 
     return (p_denom > 0.0f) ? p_num / p_denom : target_light_pos;
+}
+
+vec3 calcNewColor(int l, vec3 target_light_pos, const std::vector<KDNode*>& j_lights, float h)
+{
+    vec3 color_num(0.0f, 0.0f, 0.0f);
+    float color_denom = 0.0f;
+
+    for (const auto& node : j_lights) {
+        float w = calcTrilinearWeight(node->position, target_light_pos, h * pow(2, l-1));
+        float v = w * node->intensity;
+        color_num += v * node->color;
+        color_denom += v;
+    }
+
+    return (color_denom > 0.0f) ? color_num / color_denom : j_lights[0]->color;
 }
 
 #endif // LIGHTING_GRID_HIERARCHY_H

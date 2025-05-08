@@ -284,7 +284,7 @@ __device__ __host__ vec3 render_volume(
 
 
 // Ray trace logic (fixed t_box check)
-__device__ __host__ __forceinline__ vec3 trace_ray(
+__device__  vec3 trace_ray(
     const vec3& ray_origin,
     const vec3& ray_direction,
     light* lights,
@@ -295,7 +295,9 @@ __device__ __host__ __forceinline__ vec3 trace_ray(
     float* d_density_grid,
     int nx,
     int ny,
-    int nz)
+    int nz,
+    KDNode** d_lighting_grids,
+    int l_max, float h)
 {
 
     bool use_kdtree = false;
@@ -311,7 +313,7 @@ __device__ __host__ __forceinline__ vec3 trace_ray(
     if (t_box != -1.0f && !use_kdtree)  // safer float comparison instead of t_box != -1
         illumination = render_volume_self(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center);
     else if (use_kdtree && t_box != -1.0f)
-        illumination = render_volume_kdtree(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center);
+        illumination = render_volume_kdtree(ray_origin, ray_direction, min, max, t_box, lights, num_lights, d_density_grid, nx, ny, nz, center, d_lighting_grids, l_max, h);
 
     if(illumination != vec3{0.0f})
         return illumination;

@@ -47,5 +47,7 @@ void radiusSearch(KDNode* root, const vec3& target, float radius, std::vector<KD
 }
 
 
+
+
 #endif // KDTREE_H
 
