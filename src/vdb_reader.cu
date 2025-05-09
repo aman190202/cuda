@@ -222,55 +222,6 @@ void getScaledBoundingBox(const char* filename, vec3& outMin, vec3& outMax) {
         std::cerr << "Failed to read VDB: " << e.what() << std::endl;
     }
 }
-/*
-std::vector<float> getDenseGridFromVDB(const char* vdb_file, int& nx, int& ny, int& nz) 
-{
-    openvdb::initialize();
-    openvdb::io::File file(vdb_file);
-    file.open();
-    auto baseGrid = file.readGrid("density");
-    auto floatGrid = openvdb::gridPtrCast<openvdb::FloatGrid>(baseGrid);
-
-    // Null grid check
-    if (!floatGrid) {
-        std::cerr << "ERROR: 'density' grid not found in VDB file. Aborting." << std::endl;
-        exit(1);
-    }
-
-    auto bbox = floatGrid->evalActiveVoxelBoundingBox();
-
-    // Empty bbox check
-    if (bbox.empty()) {
-        std::cerr << "ERROR: 'density' grid has empty bounding box (no active voxels). Aborting." << std::endl;
-        exit(1);
-    }
-
-    auto dim = bbox.dim();
-    nx = dim.x();
-    ny = dim.y();
-    nz = dim.z();
-
-    // Sanity check
-    if (nx <= 0 || ny <= 0 || nz <= 0) {
-        std::cerr << "ERROR: Invalid grid dimensions: " << nx << " " << ny << " " << nz << std::endl;
-        exit(1);
-    }
-
-    std::vector<float> denseGrid(nx * ny * nz, 0.0f);
-    auto accessor = floatGrid->getAccessor();
-    for (int z = 0; z < nz; ++z) {
-        for (int y = 0; y < ny; ++y) {
-            for (int x = 0; x < nx; ++x) {
-                auto coord = bbox.min().offsetBy(x, y, z);
-                denseGrid[x + y * nx + z * nx * ny] = accessor.getValue(coord);
-            }
-        }
-    }
-
-    file.close();
-    return denseGrid;
-}
-*/
 
 std::vector<float> getDenseGridFromVDB(const char* vdb_file, int& nx, int& ny, int& nz) 
 {
@@ -363,45 +314,59 @@ std::vector<float> gaussianSmooth(const std::vector<float>& grid, int nx, int ny
 }
 
 
-// std::vector<float> getDenseGridFromVDB(const char* vdb_file, int& nx, int& ny, int& nz) 
-// {
-//     openvdb::initialize();
-//     openvdb::io::File file(vdb_file);
-//     file.open();
 
-//     auto baseGrid = file.readGrid("density");
-//     auto floatGrid = openvdb::gridPtrCast<openvdb::FloatGrid>(baseGrid);
+std::vector<light> getTopNLightsFromVDB(
+    const char* filename,
+    float* voxel_size,
+    vec3* world_min,
+    vec3* world_max,
+    size_t maxLights)
+{
+    std::vector<light> lights;
+    openvdb::initialize();
+    openvdb::io::File file(filename);
+    file.open();
+    auto baseGrid = file.readGrid("temperature");
+    auto floatGrid = openvdb::gridPtrCast<openvdb::FloatGrid>(baseGrid);
+    if (!floatGrid) { file.close(); return lights; }
 
-//     // Null grid check
-//     if (!floatGrid) {
-//         std::cerr << "ERROR: 'density' grid not found in VDB file. Aborting." << std::endl;
-//         exit(1);
-//     }
+    auto bbox = floatGrid->evalActiveVoxelBoundingBox();
+    auto wmin = floatGrid->indexToWorld(bbox.min());
+    auto wmax = floatGrid->indexToWorld(bbox.max());
+    *world_min = vec3(wmin.x(), wmin.y(), wmin.z());
+    *world_max = vec3(wmax.x(), wmax.y(), wmax.z());
+    *voxel_size = static_cast<float>(floatGrid->voxelSize().x() * 2);
 
-//     // --------->>> ADD HERE <<<<<--------
-//     // Apply Gaussian blur to smooth density grid (important for mushroom shape)
-//     openvdb::tools::GaussianFilter<openvdb::FloatGrid> filter(*floatGrid);
-//     filter.setSigma(1.0);  // Sigma controls smoothness
-//     filter.apply();
-//     // -----------------------------------
+    double height = wmax.y() - wmin.y();
+    const openvdb::Vec3d targetBase(0.0, -50.0, 0.0);
+    const float scaleFactor = 2.0f;
 
-//     auto bbox = floatGrid->evalActiveVoxelBoundingBox();
-//     auto dim = bbox.dim();
-//     nx = dim.x();
-//     ny = dim.y();
-//     nz = dim.z();
+    for (auto iter = floatGrid->beginValueOn(); iter; ++iter) {
+        float value = iter.getValue();
+        if ((value * 4500) < 1000) continue;
+        auto wp = floatGrid->indexToWorld(iter.getCoord());
+        double relY = (wp.y() - wmin.y()) / height;
+        openvdb::Vec3d sp(
+            targetBase.x() + (wp.x() - (wmin.x() + wmax.x()) * 0.5) * scaleFactor,
+            targetBase.y() + height * scaleFactor * relY,
+            targetBase.z() + (wp.z() - (wmin.z() + wmax.z()) * 0.5) * scaleFactor
+        );
+        light l;
+        l.position  = vec3(sp.x(), sp.y(), sp.z());
+        l.col       = temperatureToColor(value);
+        l.intensity = value / 5.0f;
+        if (l.intensity < 0.05f) continue;
+        lights.push_back(l);
+    }
 
-//     std::vector<float> denseGrid(nx * ny * nz, 0.0f);
-//     auto accessor = floatGrid->getAccessor();
-//     for (int z = 0; z < nz; ++z) {
-//         for (int y = 0; y < ny; ++y) {
-//             for (int x = 0; x < nx; ++x) {
-//                 auto coord = bbox.min().offsetBy(x, y, z);
-//                 denseGrid[x + y * nx + z * nx * ny] = accessor.getValue(coord);
-//             }
-//         }
-//     }
+    file.close();
 
-//     file.close();
-//     return denseGrid;
-// }
+    if (lights.size() > maxLights) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::shuffle(lights.begin(), lights.end(), gen);
+        lights.resize(maxLights);
+    }
+
+    return lights;
+}

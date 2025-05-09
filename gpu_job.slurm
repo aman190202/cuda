@@ -1,12 +1,16 @@
 #!/bin/bash
-#SBATCH --job-name=plumes
-#SBATCH --output=compile/nvdb3.out
-#SBATCH --error=compile/nvdb3.err
+#SBATCH --job-name=old_1000
+#SBATCH --output=compile/new.out
+#SBATCH --error=compile/new.err
 #SBATCH --time=12:00:00               
 #SBATCH --partition=gpu               
 #SBATCH --gres=gpu:1                  
 #SBATCH --mem=24G                     
 #SBATCH --cpus-per-task=4
+# Email notification settings
+#SBATCH --mail-type=END          # Send email when job ends
+#SBATCH --mail-user=aman_agarwal1@brown.edu  # Use user's Brown email address
+
 
 
 # Load necessary modules
@@ -66,16 +70,41 @@ echo "Compilation complete!"
 
 
 
-export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-export LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so.6
-# # for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
-# #     if [ -f "$file" ]; then
-# #         echo "Processing $file..."
-# #         ./render "$file"
-# #     fi
-# # done
-./render v1/untitled.filecache1_v1.0067.vdb
+# export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+# export LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so.6
+# for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
+#     if [ -f "$file" ]; then
+#         echo "Processing $file..."
+#         /usr/bin/time -v ./render "$file"
+#     fi
+# done
 
-# echo "All files processed!" 
+# Add timing measurement
+# echo "Starting execution timing..."
+# /usr/bin/time -v ./render v1/untitled.filecache1_v1.0067.vdb
+
+# The time command will output:
+# - User time (CPU time spent in user mode)
+# - System time (CPU time spent in kernel mode)
+# - Elapsed wall clock time
+# - Maximum resident set size
+# - Average shared memory size
+# - Average unshared data size
+# - Average unshared stack size
+# - Average total memory size
+# - Maximum resident set size
+# - Average resident set size
+# - Major (requiring I/O) page faults
+# - Minor (reclaiming a frame) page faults
+# - Voluntary context switches
+# - Involuntary context switches
+# - Swaps
+# - File system inputs
+# - File system outputs
+# - Socket messages sent
+# - Socket messages received
+# - Signals delivered
+# - Page size (bytes)
+# - Exit status
 
 # Run with CUDA-GDB
