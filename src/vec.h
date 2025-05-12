@@ -29,6 +29,7 @@ struct vec3{
     vec3 abs() const { return vec3(std::abs(x), std::abs(y), std::abs(z)); }
     
     float length() const { return sqrt(x*x + y*y + z*z); }
+    float lengthSquared() const { return x*x + y*y + z*z; }
 };
 
 inline __device__ __host__ vec3 operator+(const vec3& a, const vec3& b){

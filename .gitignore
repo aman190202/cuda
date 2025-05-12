@@ -17,3 +17,14 @@ paper.slurm
 /paper
 /lights
 /render
+render2
+render_kdtree
+kdtree.slurm
+final_demo_new/
+/openvdb
+/openvdb_build
+/openvdb_install
+/openvdb_source
+/openvdb_source_build
+/openvdb_source_install
+

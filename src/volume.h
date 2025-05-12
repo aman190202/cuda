@@ -3,9 +3,8 @@
 
 #include "light.h"
 #include "kdtree.h"
-#include "gpuKdtree.h"
 
-#define NUM 10000
+
 
 __host__ __device__ float getDensityAtPositionDevice(float* grid, int nx, int ny, int nz, vec3 grid_min, vec3 grid_max, vec3 grid_center, vec3 pos_scene) 
 {
@@ -73,6 +72,13 @@ __device__ __host__ void generate_random_array(int* out_array, int n, int m, int
 }
 
 
+/**
+ * Renders a realistic self-illuminating explosion with smooth billowing black clouds
+ * The illumination comes from the passed light sources, creating dramatic lighting effects
+ * through the volumetric smoke/explosion.
+ */
+
+
  __device__ __host__ vec3 getDensityGradient(
     float* d_density_grid,
     int nx, int ny, int nz,
@@ -109,16 +115,16 @@ __device__ __host__ vec3 render_volume_self(
     int nx, int ny, int nz,
     const vec3& center)
 {
-    const float ds = 0.8f;            // Smaller step size for better detail
+    const float ds = 0.03f;            // Smaller step size for better detail
     const int Nsteps = 300;            // More steps for better quality
-    const float sigma_s = 4.0f;        // Reduced scattering for better light penetration
-    const float sigma_a = 0.5f;       // Further reduced absorption for brighter appearance
+    const float sigma_s = 4.0f;        // Higher scattering for stronger light interaction
+    const float sigma_a = 0.5f;        // Reduced absorption for more greyish appearance
     const float sigma_t = sigma_s + sigma_a;  // extinction coefficient
     const float phase_g = 0.4f;        // Adjusted anisotropy for better light distribution
-    const int Nsample = NUM;           // Random lights count
-    const float light_radius = 1.8f;  // Increased light influence radius for better coverage
+    // const int Nsample = NUM;           // Random lights count
+    const float light_radius = 1.8f * 0.5f;   // Significantly increased light influence radius
     const float inv_r2 = 1.0f / (light_radius * light_radius);
-    const float atten_k = 0.05f;       // Further reduced attenuation for brighter illumination
+    const float atten_k = 0.01f;     // Further reduced attenuation for brighter illumination
     
     // Color temperature adjustment for realistic fire/explosion
     const vec3 hot_color = vec3{1.0f, 0.8f, 0.4f};    // Brighter orange-yellow for hot spots
@@ -129,8 +135,9 @@ __device__ __host__ vec3 render_volume_self(
     vec3 p = o + d * t_near;           // current sample
     
     // Select random lights for sampling
-    int light_idx[NUM];
-    generate_random_array(light_idx, Nsample, num_lights, 5);
+    // int light_idx[NUM];
+    // generate_random_array(light_idx, Nsample, num_lights, 556);
+    
     // Edge darkening factor for billowing effect
     const float edge_contrast = 1.5f;
     
@@ -147,7 +154,7 @@ __device__ __host__ vec3 render_volume_self(
         float rho = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, p);
         
         // Skip low-density regions
-        if (rho <= 1e-2f) continue;  // Lower density threshold for more transparency
+        if (rho <= 1e-5f) continue;  // Lower density threshold for more transparency
         
         // Calculate distance from center for edge darkening
         vec3 rel_pos = p - center;
@@ -166,10 +173,9 @@ __device__ __host__ vec3 render_volume_self(
         
         // Light accumulation
         vec3 Lsum = vec3{0.0f};
-        #pragma unroll
-        for (int si = 0; si < Nsample; ++si) {
-            int li = light_idx[si];
-            vec3 toL = lights[li].position - p;
+        for (int si = 0; si < num_lights; ++si) {
+            // int li = light_idx[si];
+            vec3 toL = lights[si].position - p;
             float dist2 = dot(toL, toL);
             
             if (dist2 > light_radius * light_radius) continue;
@@ -183,7 +189,7 @@ __device__ __host__ vec3 render_volume_self(
             float traveled = 0.0f;
             
             // March towards light to calculate occlusion with larger steps for less shadowing
-            float shadow_ds = ds * 1.5f;
+            float shadow_ds = ds * 1.5f * 2.0f;
             while (traveled < dist) {
                 ps += wi * shadow_ds;
                 float rs = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, ps);
@@ -197,7 +203,7 @@ __device__ __host__ vec3 render_volume_self(
             }
             
             // Enhanced distance attenuation model with boost factor
-            float light_boost = 4.0f; // Boost light intensity
+            float light_boost = 7.5f * 0.5f; // Boost light intensity
             float dist_factor = 1.0f / (1.0f + dist * atten_k);
             float atten = Tr_light * dist_factor * light_boost;
             
@@ -207,7 +213,7 @@ __device__ __host__ vec3 render_volume_self(
             float phase = (1.0f - phase_g*phase_g) / (4.0f * M_PI * pow(denom, 1.5f));
             
             // Add contribution from this light
-            Lsum += lights[li].col * lights[li].intensity * atten * phase;
+            Lsum += lights[si].col * lights[si].intensity * atten * phase;
         }
         
         // Temperature-based color mixing (hot core, cool outer smoke)
@@ -242,121 +248,120 @@ __device__ __host__ vec3 render_volume_self(
  */
 
 
-__device__ vec3 render_volume_kdtree(const vec3& ray_origin, const vec3& ray_direction, 
-                                     const vec3& min, const vec3& max, 
-                                     float t_box, float* d_density_grid, 
-                                     int nx, int ny, int nz, const vec3& center, 
-                                     KDNode** d_lighting_grids, int l_max, float h)
+// KDTree ray tracing
+
+
+__device__ __host__ void radiusSearch(
+    KDNode* node,
+    const vec3& query,
+    float radius,
+    KDNode** out_results,
+    int* out_count,
+    int max_results,
+    int depth = 0)
 {
-    const float ds = 0.03f;
-    const int Nsteps = 300;
-    const float sigma_s = 2.0f;
-    const float sigma_a = 0.15f;
-    const float sigma_t = sigma_s + sigma_a;
-    const float phase_g = 0.4f;
-    const float atten_k = 0.02f;
+    if (!node) return;
 
-    const vec3 hot_color = vec3{1.0f, 0.8f, 0.4f};
-    const vec3 cool_color = vec3{0.2f, 0.2f, 0.22f};
-
-    vec3 color = vec3{0.0f};
-    vec3 Tr = vec3{1.0f};
-    vec3 p = ray_origin + ray_direction * t_box;
-
-    const float edge_contrast = 1.5f;
-
-    for (int step = 0; step < Nsteps; ++step) 
-    {
-        p += ray_direction * ds;
-
-        if (p.x < min.x || p.x > max.x ||
-            p.y < min.y || p.y > max.y ||
-            p.z < min.z || p.z > max.z)
-            break;
-
-        float rho = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, p);
-        if (rho <= 1e-5f) continue;
-
-        vec3 rel_pos = p - center;
-        float dist_from_center = length(rel_pos);
-        float normalized_dist = clamp(dist_from_center / length(max - min) * 2.0f, 0.0f, 1.0f);
-
-        float density_scale = rho * mix(1.2f, edge_contrast, normalized_dist * 0.7f);
-
-        vec3 density_grad = getDensityGradient(d_density_grid, nx, ny, nz, min, max, center, p, ds);
-        float grad_mag = length(density_grad);
-        float edge_factor = clamp(grad_mag * 8.0f, 0.0f, 1.0f);
-
-        // -------------------------
-        // KDTree lights processing
-        // -------------------------
-        vec3 Lsum = vec3{0.0f};
-
-        for (int j = 0; j < l_max; ++j) 
-        {
-            KDNode* root = d_lighting_grids[j];
-            float radius = h;
-
-            KDNode* results[64];
-            int resultCount = 0;
-
-            radiusSearchRecursive(root, p, radius * radius, 0, results, &resultCount, 64);
-
-            for (int k = 0; k < resultCount; ++k)
-            {
-                KDNode* lightNode = results[k];
-                vec3 toL = lightNode->position - p;
-                float dist2 = dot(toL, toL);
-
-                float light_radius = radius;
-                if (dist2 > light_radius * light_radius) continue;
-
-                float dist = sqrt(dist2);
-                vec3 wi = toL / dist;
-
-                float Tr_light = 1.0f;
-                vec3 ps = p;
-                float traveled = 0.0f;
-                float shadow_ds = ds * 1.5f;
-
-                while (traveled < dist) 
-                {
-                    ps += wi * shadow_ds;
-                    float rs = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, ps);
-                    rs = pow(rs, 1.2f) * 0.8f;
-                    Tr_light *= exp(-sigma_t * rs * shadow_ds);
-                    if (Tr_light < 1e-4f) break;
-                    traveled += shadow_ds;
-                }
-
-                float light_boost = 10.0f;
-                float dist_factor = 1.0f / (1.0f + dist * atten_k);
-                float atten = Tr_light * dist_factor * light_boost;
-
-                float cosTh = dot(wi, -ray_direction);
-                float denom = 1.0f + phase_g * phase_g - 2.0f * phase_g * cosTh;
-                float phase = (1.0f - phase_g * phase_g) / (4.0f * M_PI * pow(denom, 1.5f));
-
-                Lsum += lightNode->color * lightNode->intensity * atten * phase;
-            }
+    // Compute distance to current node
+    float dist2 = (node->position - query).lengthSquared();
+    if (dist2 <= radius * radius) {
+        if (*out_count < max_results) {
+            out_results[*out_count] = node;
+            (*out_count)++;
         }
-
-        // Temperature-based color mixing
-        vec3 local_color = mix(hot_color, cool_color, normalized_dist);
-
-        vec3 inscatter = sigma_s * density_scale * Lsum * local_color;
-        inscatter = mix(inscatter, inscatter * 2.2f, edge_factor);
-
-        float emissive_factor = clamp(1.0f - normalized_dist * 2.0f, 0.0f, 1.0f);
-        vec3 emissive = hot_color * emissive_factor * rho * 0.8f;
-
-        color += Tr * (inscatter + emissive) * ds;
-        Tr *= exp(-sigma_t * density_scale * ds * 0.6f);
-
-        if (Tr.x + Tr.y + Tr.z < 1e-3f) break;
     }
 
-    return color;
+    // Select axis
+    int axis = depth % 3;
+    float diff = 0.0f;
+
+    if (axis == 0) diff = query.x - node->position.x;
+    else if (axis == 1) diff = query.y - node->position.y;
+    else diff = query.z - node->position.z;
+
+    // Choose side to recurse
+    if (diff <= 0.0f) {
+        // Left first
+        radiusSearch(node->left, query, radius, out_results, out_count, max_results, depth + 1);
+        if (fabsf(diff) <= radius)
+            radiusSearch(node->right, query, radius, out_results, out_count, max_results, depth + 1);
+    }
+    else {
+        // Right first
+        radiusSearch(node->right, query, radius, out_results, out_count, max_results, depth + 1);
+        if (fabsf(diff) <= radius)
+            radiusSearch(node->left, query, radius, out_results, out_count, max_results, depth + 1);
+    }
 }
+
+__device__ __host__ vec3 render_volume_kdtree(
+    const vec3& o, const vec3& d,
+    const vec3& min, const vec3& max,
+    float t_near,
+    float* d_density_grid,
+    int nx, int ny, int nz,
+    const vec3& center,
+    KDNode** d_lighting_grids, int num_lighting_grids,
+    float voxel_size)
+{
+    vec3 p = o + d * t_near;
+    const float step_size = voxel_size * 0.5f;
+    const int max_steps = 200;
+
+    vec3 accumulated_color = vec3{0.0f};
+    float transmittance = 1.0f;
+
+    for (int step = 0; step < max_steps; ++step) 
+    {
+        // Sample density at current position
+        float density = getDensityAtPositionDevice(d_density_grid, nx, ny, nz, min, max, center, p);
+
+        if (density > 0.001f)
+        {
+            vec3 lighting = vec3{0.0f};
+
+            // Gather nearby lights from all KD trees
+            for (int i = 0; i < num_lighting_grids; i++) 
+            {
+                KDNode* root = d_lighting_grids[i];
+                const float search_radius = voxel_size * 2.0f;
+
+                // gatherLights will collect lights into temporary buffer
+                const int max_results = 32;
+                KDNode* results[max_results];
+                int result_count = 0;
+
+                radiusSearch(root, p, search_radius, results, &result_count, max_results);
+
+                for (int j = 0; j < result_count; ++j) 
+                {
+                    KDNode* ln = results[j];
+                    float dist2 = (ln->position - p).lengthSquared();
+                    float atten = 1.0f / (1.0f + dist2 * 0.1f);
+                    lighting += ln->color * ln->intensity * atten;
+                }
+            }
+
+            vec3 scatter = lighting * density;
+            accumulated_color += transmittance * scatter;
+
+            float absorption = density * 0.05f;
+            transmittance *= expf(-absorption);
+
+            if (transmittance < 0.01f) break;
+        }
+
+        p += d * step_size;
+
+        // Break if outside volume
+        if (p.x < min.x || p.y < min.y || p.z < min.z ||
+            p.x > max.x || p.y > max.y || p.z > max.z)
+            break;
+    }
+
+    return accumulated_color;
+}
+
+
 
 #endif // VOLUME_H
