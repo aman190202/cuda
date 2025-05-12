@@ -1,15 +1,19 @@
 # Volumetric Path-tracer illuminated by million lights in CUDA
 
 
+## Demo Videos
 
-https://github.com/user-attachments/assets/e42190d2-ab9a-48d2-b1dd-a94354d8e0bb
+1. **100,000 Lights:**  
+   Rendering volumetric explosion illuminated by 100,000 point lights using GPU-parallel sampling.  
+   ![100k Lights](https://github.com/user-attachments/assets/e42190d2-ab9a-48d2-b1dd-a94354d8e0bb)
 
+2. **500 Lights (Baseline):**  
+   Same scene with only 500 lights to demonstrate the visual difference and performance baseline.  
+   ![500 Lights](https://github.com/user-attachments/assets/16b13a97-edcf-4353-a0c7-894c338c2185)
 
-
-https://github.com/user-attachments/assets/16b13a97-edcf-4353-a0c7-894c338c2185
-
-
-https://github.com/user-attachments/assets/fbfe76f6-40db-47c5-85a6-75527c90293c
+3. **Light Point Visualization:**  
+   Point lights shown as emissive spheres without volume scattering to visualize spatial distribution.  
+   ![Light Points](https://github.com/user-attachments/assets/fbfe76f6-40db-47c5-85a6-75527c90293c)
 
 
 A high-performance volumetric path-tracer implemented in CUDA C++ for rendering realistic explosions and volumetric effects. This renderer is capable of handling millions of light sources efficiently through GPU acceleration.
