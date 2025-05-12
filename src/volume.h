@@ -122,7 +122,7 @@ __device__ __host__ vec3 render_volume_self(
     const float sigma_t = sigma_s + sigma_a;  // extinction coefficient
     const float phase_g = 0.4f;        // Adjusted anisotropy for better light distribution
     // const int Nsample = NUM;           // Random lights count
-    const float light_radius = 1.8f ;   // Significantly increased light influence radius
+    const float light_radius = 1.8f * 0.5f;   // Significantly increased light influence radius
     const float inv_r2 = 1.0f / (light_radius * light_radius);
     const float atten_k = 0.01f;     // Further reduced attenuation for brighter illumination
     
@@ -203,7 +203,7 @@ __device__ __host__ vec3 render_volume_self(
             }
             
             // Enhanced distance attenuation model with boost factor
-            float light_boost = 7.5f * 1.5f; // Boost light intensity
+            float light_boost = 7.5f * 0.5f; // Boost light intensity
             float dist_factor = 1.0f / (1.0f + dist * atten_k);
             float atten = Tr_light * dist_factor * light_boost;
             

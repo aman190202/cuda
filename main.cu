@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
     // Light and density grid setup 
     float voxel_size;
     vec3 world_min, world_max;
-    std::vector<light> lights = getTopNLightsFromVDB(vdb_file, &voxel_size, &world_min, &world_max, 10000);
+    std::vector<light> lights = getLightsFromVDB(vdb_file, &voxel_size, &world_min, &world_max); //getTopNLightsFromVDB(vdb_file, &voxel_size, &world_min, &world_max, 100000);
     std::vector<light> lights_all = getLightsFromVDB(vdb_file, &voxel_size, &world_min, &world_max);
     std::vector<KDNode*> lighting_grids = LGH(lights_all, 1, voxel_size, world_min, world_max);
     int num_lighting_grids = lighting_grids.size();

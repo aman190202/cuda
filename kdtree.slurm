@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=sanity_check
-#SBATCH --output=compile/kdtree.out
-#SBATCH --error=compile/kdtree.err
-#SBATCH --time=12:00:00               
+#SBATCH --job-name=second
+#SBATCH --output=compile/kdtree1.out
+#SBATCH --error=compile/kdtree1.err
+#SBATCH --time=24:00:00               
 #SBATCH --partition=gpu               
 #SBATCH --gres=gpu:1                  
 #SBATCH --mem=24G                     
@@ -48,12 +48,12 @@ module load  gcc/10.1.0-mojgbnp
 
 
 # latest compilation code
-# nvcc -std=c++17 -g -G main.cu src/vdb_reader.cu -o render_kdtree \
-#     -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib \
-#     -Xlinker -rpath -Xlinker $CONDA_PREFIX/lib \
-#     -lopenvdb -ltbb -lblosc -lboost_system -lboost_iostreams -lboost_filesystem -w
+nvcc -std=c++17 -g -G main.cu src/vdb_reader.cu -o render_kdtree \
+    -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib \
+    -Xlinker -rpath -Xlinker $CONDA_PREFIX/lib \
+    -lopenvdb -ltbb -lblosc -lboost_system -lboost_iostreams -lboost_filesystem -w
 
-# echo "Compilation complete!"
+echo "Compilation complete!"
 
 # Now compile CUDA code
 # nvcc main.cu -o render
@@ -71,14 +71,17 @@ module load  gcc/10.1.0-mojgbnp
 
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 export LD_PRELOAD=$CONDA_PREFIX/lib/libstdc++.so.6
-# # for file in /users/aagar133/scratch/cuda/v1/*.vdb; do
-# #     if [ -f "$file" ]; then
-# #         echo "Processing $file..."
-# #         /usr/bin/time -v ./render "$file"
-# #     fi
-# # done
+# for i in {46..76}; do
+#     file="/users/aagar133/scratch/cuda/v1/untitled.filecache1_v1.$(printf "%04d" $i).vdb"
+#     if [ -f "$file" ]; then
+#         echo "Processing $file..."
+#         /usr/bin/time -v ./render_kdtree "$file"
+#     else
+#         echo "File $file not found"
+#     fi
+# done
 
-# # Add timing measurement
+# # # Add timing measurement
 echo "Starting execution timing..."
 /usr/bin/time -v ./render_kdtree v1/untitled.filecache1_v1.0067.vdb
 
